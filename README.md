@@ -61,18 +61,19 @@
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/ballsy-voice-assistant.git
+git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
 cd ballsy-voice-assistant
 ```
 
 2. **Run Ballsy** (One command setup)
 ```bash
-python3 run.py
+python3 run.py --frontend-port 5001
 ```
 
 That's it! Ballsy will:
 - ✅ Install all dependencies automatically
-- ✅ Start backend and frontend servers
+- ✅ Start backend server on port 8000
+- ✅ Start frontend server on port 5001 (avoiding macOS AirPlay conflicts)
 - ✅ Open your browser to the voice assistant
 - ✅ Be ready for voice commands!
 
@@ -97,7 +98,7 @@ cd src/frontend
 python -m http.server 5000
 ```
 
-4. **Open browser** to `http://localhost:5000`
+4. **Open browser** to `http://localhost:5001`
 
 ## 🎯 Usage
 
@@ -242,7 +243,13 @@ Add new service integrations in the command processor's URL handlers section.
 **🌐 Frontend not connecting**
 - Verify both servers are running
 - Check browser console (F12) for errors
-- Ensure backend URL is correct
+- Try using port 5001: `python3 run.py --frontend-port 5001`
+- On macOS, port 5000 might conflict with AirPlay Receiver
+
+**🚪 Port 5000 already in use (macOS)**
+- Use the recommended command: `python3 run.py --frontend-port 5001`
+- Or disable AirPlay Receiver: System Preferences → General → AirDrop & Handoff
+- Alternative ports: `--frontend-port 8080` or `--frontend-port 3000`
 
 ### 📋 System Requirements
 
@@ -266,7 +273,7 @@ We welcome contributions! Here's how to get started:
 
 ```bash
 # Clone your fork
-git clone https://github.com/yourusername/ballsy-voice-assistant.git
+git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
 
 # Create virtual environment
 python -m venv ballsy-env
@@ -293,9 +300,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **📧 Issues**: [GitHub Issues](https://github.com/yourusername/ballsy-voice-assistant/issues)
-- **💬 Discussions**: [GitHub Discussions](https://github.com/yourusername/ballsy-voice-assistant/discussions)
-- **📖 Wiki**: [Project Wiki](https://github.com/yourusername/ballsy-voice-assistant/wiki)
+- **📧 Issues**: [GitHub Issues](https://github.com/ethicalzeus07/ballsy-voice-assistant/issues)
+- **💬 Discussions**: [GitHub Discussions](https://github.com/ethicalzeus07/ballsy-voice-assistant/discussions)
+- **📖 Wiki**: [Project Wiki](https://github.com/ethicalzeus07/ballsy-voice-assistant/wiki)
 
 ## 🚀 What's Next?
 
