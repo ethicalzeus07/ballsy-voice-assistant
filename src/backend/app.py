@@ -8,6 +8,7 @@ This module provides the core backend functionality including:
 - Command processing and execution
 - External service integration
 - Auto-clear conversation history on startup
+- Serving the frontend (HTML/CSS/JS) via FastAPI
 """
 
 import os
@@ -17,16 +18,15 @@ import json
 import asyncio
 import logging
 import datetime
-import subprocess
-import webbrowser
 from typing import Dict, List, Optional, Union, Any
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 
 # FastAPI imports
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, Request, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 # Speech recognition
@@ -38,7 +38,6 @@ from dotenv import load_dotenv
 
 # Database
 import sqlite3
-from contextlib import contextmanager
 
 # Setup logging
 logging.basicConfig(
@@ -62,8 +61,8 @@ mistral_client = Mistral(api_key=MISTRAL_API_KEY)
 MISTRAL_MODEL = "mistral-large-latest"
 SYSTEM_PROMPT = "You are Ballsy, a helpful voice assistant. Always provide a single sentence answer, keeping responses brief, concise, and to the point."
 DB_PATH = "voice_assistant.db"
-VOICE = "Daniel"  # Default voice
-VOICE_SPEED = 180  # Default speech rate
+VOICE = "Daniel"       # Default voice
+VOICE_SPEED = 180      # Default speech rate
 
 # Function to clear conversation history on startup
 def clear_conversation_history():
@@ -71,7 +70,6 @@ def clear_conversation_history():
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            # Clear all messages and command history
             cursor.execute("DELETE FROM messages")
             cursor.execute("DELETE FROM command_history")
             cursor.execute("DELETE FROM conversations")
@@ -86,10 +84,7 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize database and clear history
     init_db()
     logger.info("Database initialized")
-    
-    # Clear conversation history for fresh start
     clear_conversation_history()
-    
     yield
     # Shutdown: Clean up resources if needed
     logger.info("Shutting down Ballsy...")
@@ -302,16 +297,11 @@ class CommandProcessor:
             
             # Who is/What is questions - AI response
             if any(phrase in cmd.lower() for phrase in ["who is", "who's", "what is", "what's", "tell me about"]):
-                # Check if it's a person query
                 is_person = any(phrase in cmd.lower() for phrase in ["who is", "who's"])
-                
-                # Remove question words to get the subject
                 subject = cmd.lower()
                 for phrase in ["who is", "who's", "what is", "what's", "tell me about"]:
                     subject = subject.replace(phrase, "").strip()
-                
                 if subject:
-                    # Try AI first, falls back to search if needed
                     result = await self._get_info_or_search(subject, is_person)
                     return result
             
@@ -333,7 +323,6 @@ class CommandProcessor:
                         data={"url": url, "description": f"{query} on YouTube"}
                     )
             
-            # Popular Sites URL Handlers
             # Spotify
             if "on spotify" in cmd.lower():
                 match = re.search(r"(?:open|search|play|listen to)?\s*(.+?)\s+on\s+spotify", cmd.lower())
@@ -400,7 +389,6 @@ class CommandProcessor:
                 match = re.search(r"(?:open|search|find)?\s*(.+?)\s+on\s+instagram", cmd.lower())
                 if match:
                     query = match.group(1).strip()
-                    # Check if it's a username (without spaces)
                     if " " not in query:
                         url = f"https://www.instagram.com/{query}"
                         return CommandResponse(
@@ -409,7 +397,6 @@ class CommandProcessor:
                             data={"url": url, "description": f"{query}'s Instagram"}
                         )
                     else:
-                        # Assume it's a search or hashtag
                         url = f"https://www.instagram.com/explore/tags/{query.replace(' ', '')}"
                         return CommandResponse(
                             response=f"Opening #{query} on Instagram",
@@ -470,7 +457,6 @@ class CommandProcessor:
                 elif "yahoo" in cmd.lower():
                     url = "https://mail.yahoo.com"
                 else:
-                    # Default to Gmail
                     url = "https://mail.google.com"
                 return CommandResponse(
                     response="Opening your email",
@@ -494,8 +480,6 @@ class CommandProcessor:
                 "apple tv": "https://tv.apple.com",
                 "apple tv+": "https://tv.apple.com"
             }
-            
-            # Check if command contains any streaming service
             for service, url in streaming_services.items():
                 if f"open {service}" in cmd.lower():
                     return CommandResponse(
@@ -509,8 +493,6 @@ class CommandProcessor:
                 match = re.search(r"open\s+(.+?)(?:\s+on\s+google)?$", cmd.lower())
                 if match:
                     target = match.group(1).strip()
-                    
-                    # Check if it should be opened on Google
                     if " on google" in cmd.lower():
                         url = f"https://www.google.com/search?q={target.replace(' ', '+')}"
                         return CommandResponse(
@@ -518,8 +500,6 @@ class CommandProcessor:
                             action="open_url",
                             data={"url": url, "description": f"{target} on Google"}
                         )
-                    
-                    # Web applications and websites
                     website_mapping = {
                         "youtube": "https://youtube.com",
                         "google": "https://google.com",
@@ -543,8 +523,6 @@ class CommandProcessor:
                         "maps": "https://maps.google.com",
                         "google maps": "https://maps.google.com"
                     }
-                    
-                    # Check for websites
                     for site, url in website_mapping.items():
                         if site in target.lower():
                             return CommandResponse(
@@ -552,7 +530,6 @@ class CommandProcessor:
                                 action="open_url",
                                 data={"url": url, "description": site.title()}
                             )
-                    
                     # If not a known website, try to open as an app
                     return CommandResponse(
                         response=f"Opening {target}",
@@ -650,7 +627,7 @@ class CommandProcessor:
             
             reply = chat_response.choices[0].message.content.strip()
             
-            # Check if the AI gave a non-answer
+            # Check for uncertain phrases
             uncertain_phrases = [
                 "don't know", "not familiar", "can't find",
                 "don't have information", "not sure",
@@ -660,14 +637,12 @@ class CommandProcessor:
                 "I don't have specific", "I don't have enough"
             ]
             
-            # For person queries, check for generic or uncertain responses
             if is_person and (
                     any(phrase in reply.lower() for phrase in uncertain_phrases) or
-                    len(reply.split()) < 4 or  # Too short to be informative
-                    reply.endswith("?") or  # AI is asking a question back
+                    len(reply.split()) < 4 or
+                    reply.endswith("?") or
                     "would you like" in reply.lower()
             ):
-                # AI doesn't know or gave generic response, search for the person
                 search_term = f"who is {query} person biography"
                 return CommandResponse(
                     response=f"Let me find information about {query}",
@@ -675,19 +650,16 @@ class CommandProcessor:
                     data={"query": search_term}
                 )
             elif not is_person and any(phrase in reply.lower() for phrase in uncertain_phrases):
-                # AI doesn't know, search on Google
                 return CommandResponse(
                     response=f"Let me search for information about {query}",
                     action="search",
                     data={"query": query}
                 )
             else:
-                # AI provided an answer
                 return CommandResponse(response=reply)
         
         except Exception as e:
             logger.error(f"Error getting info: {e}")
-            # Fall back to search on failure
             if is_person:
                 return CommandResponse(
                     response=f"Let me search for that",
@@ -704,9 +676,7 @@ class CommandProcessor:
     async def _ai_fallback(self, prompt: str) -> CommandResponse:
         """Use Mistral AI for general responses - limited to one sentence."""
         try:
-            # Explicitly request single sentence responses
             augmented_prompt = f"Answer this in a single concise sentence: {prompt}"
-            
             chat_response = mistral_client.chat.complete(
                 model=MISTRAL_MODEL,
                 messages=[
@@ -714,21 +684,16 @@ class CommandProcessor:
                     {"role": "user", "content": augmented_prompt}
                 ],
                 temperature=0.5,
-                max_tokens=75  # Reduced to encourage shorter responses
+                max_tokens=75
             )
-            
             reply = chat_response.choices[0].message.content.strip()
-            
-            # If response still has multiple sentences, just keep the first one
             sentences = re.split(r'(?<=[.!?])\s+', reply)
             if len(sentences) > 1:
                 reply = sentences[0]
-            
             return CommandResponse(response=reply)
         
         except Exception as e:
             logger.error(f"Mistral AI error: {e}")
-            # Fall back to search on AI failure
             return CommandResponse(
                 response="Let me search for that",
                 action="search",
@@ -737,17 +702,17 @@ class CommandProcessor:
 
 command_processor = CommandProcessor()
 
-# API Routes
-@app.get("/")
-async def root():
-    """Root endpoint that returns API information."""
-    return {
-        "name": "Ballsy Voice Assistant API",
-        "version": "1.0.0",
-        "status": "running",
-        "message": "Ballsy is ready to help!"
-    }
+# Serve the frontend (templates + static)
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(frontend_dir, "templates"))
 
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend(request: Request):
+    """Serve the main UI."""
+    return templates.TemplateResponse("index.html", {"request": request})
+
+# API Routes
 @app.post("/api/command", response_model=CommandResponse)
 async def process_command(request: CommandRequest):
     """Process a text command and return the response."""
@@ -757,24 +722,16 @@ async def process_command(request: CommandRequest):
 @app.post("/api/voice", response_model=CommandResponse)
 async def process_voice(file: UploadFile = File(...), user_id: int = 1):
     """Process a voice file and return the response."""
-    # Save the uploaded file temporarily
     temp_file_path = f"temp_audio_{int(time.time())}.wav"
     try:
         with open(temp_file_path, "wb") as buffer:
             buffer.write(await file.read())
-        
-        # Recognize speech from the file
         text = speech_recognizer.recognize_from_file(temp_file_path)
-        
         if not text:
             return CommandResponse(response="I didn't catch that. Could you please repeat?")
-        
-        # Process the recognized command
         response = await command_processor.process_command(text, user_id)
         return response
-    
     finally:
-        # Clean up the temporary file
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
@@ -800,72 +757,50 @@ async def update_settings(user_id: int, settings: SettingsUpdate):
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            
-            # Check if user exists
             cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
             user = cursor.fetchone()
-            
             if not user:
-                # Create user if not exists
                 cursor.execute("INSERT INTO users (id) VALUES (?)", (user_id,))
-            
-            # Update settings
             updates = []
             params = []
-            
             if settings.voice is not None:
                 updates.append("voice = ?")
                 params.append(settings.voice)
-            
             if settings.voice_speed is not None:
                 updates.append("voice_speed = ?")
                 params.append(settings.voice_speed)
-            
             if settings.theme is not None:
                 updates.append("theme = ?")
                 params.append(settings.theme)
-            
             if updates:
-                # Check if settings exist for user
                 cursor.execute("SELECT id FROM settings WHERE user_id = ?", (user_id,))
                 user_settings = cursor.fetchone()
-                
                 if user_settings:
-                    # Update existing settings
                     query = f"UPDATE settings SET {', '.join(updates)} WHERE user_id = ?"
                     params.append(user_id)
                     cursor.execute(query, params)
                 else:
-                    # Create new settings
                     columns = ["user_id"]
                     values = ["?"]
                     params_with_user_id = [user_id]
-                    
                     if settings.voice is not None:
                         columns.append("voice")
                         values.append("?")
                         params_with_user_id.append(settings.voice)
-                    
                     if settings.voice_speed is not None:
                         columns.append("voice_speed")
                         values.append("?")
                         params_with_user_id.append(settings.voice_speed)
-                    
                     if settings.theme is not None:
                         columns.append("theme")
                         values.append("?")
                         params_with_user_id.append(settings.theme)
-                    
                     query = f"INSERT INTO settings ({', '.join(columns)}) VALUES ({', '.join(values)})"
                     cursor.execute(query, params_with_user_id)
-            
             conn.commit()
-            
-            # Return updated settings
             cursor.execute("SELECT * FROM settings WHERE user_id = ?", (user_id,))
             updated_settings = dict(cursor.fetchone())
             return {"settings": updated_settings}
-    
     except Exception as e:
         logger.error(f"Error updating settings: {e}")
         raise HTTPException(status_code=500, detail="Failed to update settings")
@@ -878,9 +813,7 @@ async def get_settings(user_id: int):
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM settings WHERE user_id = ?", (user_id,))
             settings = cursor.fetchone()
-            
             if not settings:
-                # Return default settings if not found
                 return {
                     "settings": {
                         "user_id": user_id,
@@ -889,62 +822,37 @@ async def get_settings(user_id: int):
                         "theme": "light"
                     }
                 }
-            
             return {"settings": dict(settings)}
-    
     except Exception as e:
         logger.error(f"Error retrieving settings: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve settings")
 
-# WebSocket endpoint for real-time voice communication
 @app.websocket("/ws/voice/{client_id}")
 async def websocket_voice_endpoint(websocket: WebSocket, client_id: int):
+    """WebSocket endpoint for real-time voice communication."""
     await manager.connect(websocket, client_id)
     try:
         while True:
-            # Receive JSON data
             data = await websocket.receive_json()
-            
             if "command" in data:
-                # Process text command
                 response = await command_processor.process_command(data["command"], client_id)
                 await manager.send_message(client_id, {
                     "type": "command_response",
                     "data": response.dict()
                 })
-            
             elif "status" in data and data["status"] == "listening":
-                # Client is listening for voice input
                 await manager.send_message(client_id, {
                     "type": "status_update",
                     "status": "ready"
                 })
-            
             else:
-                # Unknown message type
                 await manager.send_message(client_id, {
                     "type": "error",
                     "message": "Unknown message format"
                 })
-    
     except WebSocketDisconnect:
         manager.disconnect(client_id)
         logger.info(f"Client #{client_id} disconnected")
-    
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
         manager.disconnect(client_id)
-
-# Create static directory if it doesn't exist
-os.makedirs("static", exist_ok=True)
-
-# Serve static files for the frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Main entry point
-if __name__ == "__main__":
-    import uvicorn
-    
-    # Run the FastAPI server
-    logger.info("🚀 Starting Ballsy Voice Assistant...")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
