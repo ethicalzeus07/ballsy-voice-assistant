@@ -193,7 +193,6 @@ ballsy-voice-assistant/
 ├── README.md
 ├── run.py                         # Entrypoint for local and Render deployment
 ├── pyproject.toml                 # Python project configuration and dependencies
-├── LICENSE                        # MIT License
 ├── .env                           # Environment variables (Mistral API key)
 ├── docs/                          # Optional: screenshots or additional docs
 │   ├── screenshot-ballsy1.png
@@ -338,12 +337,6 @@ pip install -r requirements-dev.txt
 # Run tests
 python test.py
 ```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
