@@ -1,9 +1,8 @@
-````markdown
 # 🎤 Ballsy - AI Voice Assistant
 
 **Ballsy** is a full-stack Python-based voice assistant with a beautiful Siri-like UI. Built with a FastAPI backend and a modern web frontend, Ballsy provides intelligent voice interactions powered by Mistral AI.
 
-![Ballsy Voice Assistant]https://img.shields.io/badge/Voice%20Assistant-Ballsy-blue?style=for-the-badge&logo=microphone
+![Ballsy Voice Assistant](https://img.shields.io/badge/Voice%20Assistant-Ballsy-blue?style=for-the-badge&logo=microphone)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=flat-square&logo=javascript)
@@ -76,7 +75,7 @@
    ```bash
    git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
    cd ballsy-voice-assistant
-````
+   ```
 
 2. **Create and activate a Python virtual environment**
 
@@ -106,7 +105,7 @@
    ```
 
    * Open your browser at [http://localhost:8000](http://localhost:8000).
-   * Speak or type a command (e.g., “Hello”) and watch Ballsy reply!
+   * Speak or type a command (e.g., "Hello") and watch Ballsy reply!
 
 ---
 
@@ -170,7 +169,7 @@ Ballsy responds to natural language. Try these commands:
 
 Access via the gear icon in the UI. Available settings:
 
-* **🎙️ Voice Selection** – Choose from system voices (e.g., “Daniel,” “Samantha”).
+* **🎙️ Voice Selection** – Choose from system voices (e.g., "Daniel," "Samantha").
 * **⚡ Speech Rate** – Adjust speaking speed (120–250 WPM).
 * **🎨 Theme** – Light, Dark, or System default.
 * **🎨 Accent Colors** – Blue, Purple, Green, Orange.
@@ -244,11 +243,11 @@ Tests include:
 
 ### Extending AI Capabilities
 
-* Edit the `SYSTEM_PROMPT` constant at the top of `src/backend/app.py` to adjust Ballsy’s personality or instructions.
+* Edit the `SYSTEM_PROMPT` constant at the top of `src/backend/app.py` to adjust Ballsy's personality or instructions.
 
 ### Custom Integrations
 
-* Add new service integrations (e.g., additional URLs or actions) in the command processor’s handler section.
+* Add new service integrations (e.g., additional URLs or actions) in the command processor's handler section.
 
 ---
 
@@ -278,7 +277,7 @@ Tests include:
 
 * Ensure the backend server is running (`python run.py`).
 * Check the browser console (F12) for errors.
-* Make sure you’re visiting [http://localhost:8000](http://localhost:8000).
+* Make sure you're visiting [http://localhost:8000](http://localhost:8000).
 
 **🚪 Port 5000/5001 conflicts (macOS)**
 
@@ -340,7 +339,13 @@ pip install -r requirements-dev.txt
 python test.py
 ```
 
+---
 
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## ⭐️ Acknowledgments
 
@@ -355,6 +360,3 @@ python test.py
 **⭐ If you like Ballsy, please give us a star on GitHub! ⭐**
 
 *Built with ❤️ and lots of ☕*
-
-```
-```
