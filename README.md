@@ -3,7 +3,7 @@
 
 **Ballsy** is a full-stack Python-based voice assistant with a beautiful Siri-like UI. Built with a FastAPI backend and a modern web frontend, Ballsy provides intelligent voice interactions powered by Mistral AI.
 
-![Ballsy Voice Assistant](https://img.shields.io/badge/Voice%20Assistant-Ballsy-blue?style=for-the-badge&logo=microphone)
+![Ballsy Voice Assistant]https://img.shields.io/badge/Voice%20Assistant-Ballsy-blue?style=for-the-badge&logo=microphone
 ![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=flat-square&logo=javascript)
