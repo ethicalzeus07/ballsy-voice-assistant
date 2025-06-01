@@ -49,7 +49,7 @@ async function initApp() {
     initUIListeners();
     
     // Load conversation history
-    await loadConversationHistory();
+    //await loadConversationHistory();
     
     // Set initial UI state
     updateUIState('idle');
