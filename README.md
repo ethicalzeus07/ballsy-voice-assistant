@@ -1,4 +1,3 @@
-````markdown
 # 🎤 Ballsy - AI Voice Assistant
 
 **Ballsy** is a full-stack Python-based voice assistant with a beautiful Siri-like UI. Built with a FastAPI backend and a modern web frontend, Ballsy provides intelligent voice interactions powered by Mistral AI.
@@ -76,7 +75,7 @@
    ```bash
    git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
    cd ballsy-voice-assistant
-````
+   ```
 
 2. **Create and activate a Python virtual environment**
 
@@ -106,7 +105,7 @@
    ```
 
    * Open your browser at [http://localhost:8000](http://localhost:8000).
-   * Speak or type a command (e.g., “Hello”) and watch Ballsy reply!
+   * Speak or type a command (e.g., "Hello") and watch Ballsy reply!
 
 ---
 
@@ -170,7 +169,7 @@ Ballsy responds to natural language. Try these commands:
 
 Access via the gear icon in the UI. Available settings:
 
-* **🎙️ Voice Selection** – Choose from system voices (e.g., “Daniel,” “Samantha”).
+* **🎙️ Voice Selection** – Choose from system voices (e.g., "Daniel," "Samantha").
 * **⚡ Speech Rate** – Adjust speaking speed (120–250 WPM).
 * **🎨 Theme** – Light, Dark, or System default.
 * **🎨 Accent Colors** – Blue, Purple, Green, Orange.
@@ -194,7 +193,6 @@ ballsy-voice-assistant/
 ├── README.md
 ├── run.py                         # Entrypoint for local and Render deployment
 ├── pyproject.toml                 # Python project configuration and dependencies
-├── LICENSE                        # MIT License
 ├── .env                           # Environment variables (Mistral API key)
 ├── docs/                          # Optional: screenshots or additional docs
 │   ├── screenshot-ballsy1.png
@@ -244,11 +242,11 @@ Tests include:
 
 ### Extending AI Capabilities
 
-* Edit the `SYSTEM_PROMPT` constant at the top of `src/backend/app.py` to adjust Ballsy’s personality or instructions.
+* Edit the `SYSTEM_PROMPT` constant at the top of `src/backend/app.py` to adjust Ballsy's personality or instructions.
 
 ### Custom Integrations
 
-* Add new service integrations (e.g., additional URLs or actions) in the command processor’s handler section.
+* Add new service integrations (e.g., additional URLs or actions) in the command processor's handler section.
 
 ---
 
@@ -278,7 +276,7 @@ Tests include:
 
 * Ensure the backend server is running (`python run.py`).
 * Check the browser console (F12) for errors.
-* Make sure you’re visiting [http://localhost:8000](http://localhost:8000).
+* Make sure you're visiting [http://localhost:8000](http://localhost:8000).
 
 **🚪 Port 5000/5001 conflicts (macOS)**
 
@@ -340,7 +338,7 @@ pip install -r requirements-dev.txt
 python test.py
 ```
 
-
+---
 
 ## ⭐️ Acknowledgments
 
@@ -355,6 +353,3 @@ python test.py
 **⭐ If you like Ballsy, please give us a star on GitHub! ⭐**
 
 *Built with ❤️ and lots of ☕*
-
-```
-```
