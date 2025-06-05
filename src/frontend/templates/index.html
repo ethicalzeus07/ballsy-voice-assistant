@@ -3,243 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Assistant</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Ballsy</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="app-container">
         <div class="assistant-container">
+            <!-- Simple Header -->
             <div class="assistant-header">
-                <h1>Voice Assistant</h1>
-                <div class="settings-button">
-                    <i class="fas fa-cog"></i>
+                <div class="header-top">
+                    <div class="status-badge">
+                        <div class="status-indicator"></div>
+                        <span id="connection-status">Ready</span>
+                    </div>
+
                 </div>
+                
+                <h1 class="title">Ballsy</h1>
             </div>
-            
+
+            <!-- Conversation History -->
             <div class="conversation-container">
-                <div id="conversation-history"></div>
+                <div id="conversation-history">
+                    <!-- Messages will appear here when you start chatting -->
+                </div>
             </div>
-            
-            <div class="voice-indicator-container">
+
+            <!-- Enhanced Voice Section -->
+            <div class="voice-section">
                 <div class="voice-indicator">
-                    <div class="voice-orb idle">
-                        <div class="orb-inner"></div>
-                        <div class="orb-waves">
-                            <div class="wave wave1"></div>
-                            <div class="wave wave2"></div>
-                            <div class="wave wave3"></div>
+                    <!-- Status rings -->
+                    <div class="status-ring ring1"></div>
+                    <div class="status-ring ring2"></div>
+                    
+                    <!-- Floating particles -->
+                    <div class="particles">
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                        <div class="particle"></div>
+                    </div>
+                    
+                    <!-- Main orb -->
+                    <div class="voice-orb idle" id="voice-orb">
+                        <div class="orb-inner">
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="voice-status">
-                    <p id="status-text">Click to activate</p>
-                </div>
-                
-                <div class="voice-controls">
-                    <button id="activate-button" class="control-button">
-                        <i class="fas fa-microphone"></i>
-                    </button>
-                    <button id="stop-button" class="control-button hidden">
-                        <i class="fas fa-stop"></i>
-                    </button>
-                    <button id="text-input-button" class="control-button">
-                        <i class="fas fa-keyboard"></i>
-                    </button>
+                    <div id="status-text">Click to activate</div>
+                    <div class="status-subtitle">Tap Ballsy or type below</div>
                 </div>
             </div>
-            
-            <div id="text-input-container" class="hidden">
-                <input type="text" id="text-command" placeholder="Type your command...">
-                <button id="send-text-button">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+
+            <!-- Enhanced Input -->
+            <div class="input-section">
+                <div class="input-container">
+                    <input type="text" id="text-command" placeholder="Type a command or question..." onkeypress="handleKeyPress(event)">
+                    <button id="send-button" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
         </div>
+
+        <!-- Settings Panel -->
         
-        <!-- Settings Panel - Initially Hidden -->
-        <div id="settings-panel" class="hidden">
-            <div class="settings-header">
-                <h2>Settings</h2>
-                <button id="close-settings">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="settings-content">
-                <div class="setting-group">
-                    <h3>Voice</h3>
-                    <div class="setting-item">
-                        <label for="voice-select">Assistant Voice</label>
-                        <select id="voice-select">
-                            <option value="Daniel">Daniel</option>
-                            <option value="Samantha">Samantha</option>
-                            <option value="Alex">Alex</option>
-                            <option value="Karen">Karen</option>
-                        </select>
-                    </div>
-                    
-                    <div class="setting-item">
-                        <label for="voice-speed">Speech Rate</label>
-                        <div class="range-container">
-                            <input type="range" id="voice-speed" min="120" max="250" value="180">
-                            <span id="voice-speed-value">180</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="setting-group">
-                    <h3>Appearance</h3>
-                    <div class="setting-item">
-                        <label for="theme-select">Theme</label>
-                        <select id="theme-select">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="system">System Default</option>
-                        </select>
-                    </div>
-                    
-                    <div class="setting-item">
-                        <label for="color-select">Accent Color</label>
-                        <select id="color-select">
-                            <option value="blue">Blue</option>
-                            <option value="purple">Purple</option>
-                            <option value="green">Green</option>
-                            <option value="orange">Orange</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="setting-group">
-                    <h3>Recognition</h3>
-                    <div class="setting-item">
-                        <label for="sensitivity-slider">Microphone Sensitivity</label>
-                        <div class="range-container">
-                            <input type="range" id="sensitivity-slider" min="1" max="10" value="5">
-                            <span id="sensitivity-value">5</span>
-                        </div>
-                    </div>
-                    
-                    <div class="setting-item checkbox-item">
-                        <input type="checkbox" id="auto-listen" checked>
-                        <label for="auto-listen">Auto-listen after response</label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="settings-footer">
-                <button id="save-settings" class="primary-button">Save Settings</button>
-                <button id="reset-settings">Reset to Default</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- CRITICAL: Scripts loaded in correct order -->
-    <!-- 1. Initialize global state first -->
+
+
     <script>
-        // Ensure global state is available immediately
+        // Enhanced global state that integrates with voice.js
         window.appState = {
             isListening: false,
             isProcessing: false,
             isSpeaking: false,
             webSocket: null,
             currentUserId: 1,
+            commandCount: 0,
+            startTime: Date.now(),
             settings: {
                 voice: 'Daniel',
-                voiceSpeed: 180,
+                voiceSpeed: 1.0,
+                voicePitch: 1.0,
                 theme: 'light',
                 accentColor: 'blue',
                 sensitivity: 5,
-                autoListen: true
+                autoListen: true,
+                darkMode: false
             },
             conversation: []
         };
-        console.log('Global state initialized');
+        console.log('Enhanced global state initialized');
+
+        // Enhanced functions that work with voice.js
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('active');
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('active');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('text-command');
+            const message = input.value.trim();
+            
+            if (message) {
+                console.log('📝 Sending text message:', message);
+                addMessage('user', message);
+                input.value = '';
+                
+                // Use voice.js sendCommandFallback if available, otherwise simulate
+                if (window.voiceFunctions && window.sendCommandFallback) {
+                    // Update UI to processing state
+                    updateUIState('processing');
+                    // Send through voice.js API
+                    sendCommandFallback(message);
+                } else {
+                    // Fallback simulation
+                    setTimeout(() => {
+                        addTypingIndicator();
+                        setTimeout(() => {
+                            removeTypingIndicator();
+                            addMessage('assistant', getBallsyResponse(message));
+                        }, 1500);
+                    }, 500);
+                }
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function addMessage(sender, text) {
+            const history = document.getElementById('conversation-history');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            
+            history.appendChild(messageDiv);
+            history.scrollTop = history.scrollHeight;
+            
+            // Update command count if it's a user message
+            if (sender === 'user') {
+                window.appState.commandCount++;
+            }
+        }
+
+        function addTypingIndicator() {
+            const history = document.getElementById('conversation-history');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                <span>Ballsy is typing...</span>
+            `;
+            history.appendChild(typingDiv);
+            history.scrollTop = history.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        function getBallsyResponse(message) {
+            const responses = [
+                "I understand you're asking about: " + message,
+                "That's an interesting question! Let me help you with that.",
+                "I can help you with that. Here's what I think...",
+                "Based on your question about '" + message + "', I'd say...",
+                "Great question! Here's my response to that.",
+                "I'm here to help! Regarding '" + message + "'...",
+                "Let me process that for you. " + message + " is something I can assist with.",
+                "Thanks for asking! Here's what I know about that topic."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function updateUIState(state) {
+            console.log('🎨 UI state update:', state);
+            
+            const voiceOrb = document.querySelector('.voice-orb');
+            const statusText = document.getElementById('status-text');
+            const orbIcon = document.getElementById('orb-icon');
+            
+            if (voiceOrb) {
+                voiceOrb.classList.remove('idle', 'listening', 'processing', 'speaking', 'error');
+                voiceOrb.classList.add(state);
+            }
+            
+            if (statusText && orbIcon) {
+                switch (state) {
+                    case 'idle':
+                        statusText.textContent = 'Click to activate';
+                        orbIcon.className = 'fas fa-microphone orb-icon';
+                        break;
+                    case 'listening':
+                        statusText.textContent = 'Listening...';
+                        orbIcon.className = 'fas fa-circle orb-icon';
+                        break;
+                    case 'processing':
+                        statusText.textContent = 'Processing...';
+                        orbIcon.className = 'fas fa-brain orb-icon';
+                        break;
+                    case 'speaking':
+                        statusText.textContent = 'Speaking...';
+                        orbIcon.className = 'fas fa-volume-up orb-icon';
+                        break;
+                    case 'error':
+                        statusText.textContent = 'Error occurred';
+                        orbIcon.className = 'fas fa-exclamation-triangle orb-icon';
+                        break;
+                }
+            }
+            
+            // Update global state
+            window.appState.isListening = (state === 'listening');
+            window.appState.isProcessing = (state === 'processing');
+            window.appState.isSpeaking = (state === 'speaking');
+        }
+
+        function clearChat() {
+            const history = document.getElementById('conversation-history');
+            history.innerHTML = '';
+            window.appState.commandCount = 0;
+            window.appState.startTime = Date.now();
+        }
+
+        function saveSettings() {
+            // Get all settings values
+            window.appState.settings.voiceSpeed = parseFloat(document.getElementById('voice-speed').value);
+            window.appState.settings.voicePitch = parseFloat(document.getElementById('voice-pitch').value);
+            window.appState.settings.voice = document.getElementById('voice-select').value;
+            window.appState.settings.darkMode = document.getElementById('dark-mode').checked;
+            window.appState.settings.autoListen = document.getElementById('auto-listen').checked;
+            window.appState.settings.sensitivity = parseInt(document.getElementById('sensitivity').value);
+            
+            // Apply dark mode
+            if (window.appState.settings.darkMode) {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+            
+            toggleSettings();
+            addMessage('assistant', 'Settings saved successfully!');
+        }
+
+        function resetSettings() {
+            window.appState.settings = {
+                voice: 'Daniel',
+                voiceSpeed: 1.0,
+                voicePitch: 1.0,
+                theme: 'light',
+                accentColor: 'blue',
+                sensitivity: 5,
+                autoListen: true,
+                darkMode: false
+            };
+            
+            // Reset form values
+            document.getElementById('voice-speed').value = 1.0;
+            document.getElementById('voice-pitch').value = 1.0;
+            document.getElementById('voice-select').value = 'Daniel';
+            document.getElementById('dark-mode').checked = false;
+            document.getElementById('auto-listen').checked = true;
+            document.getElementById('sensitivity').value = 5;
+            
+            document.body.classList.remove('dark-theme');
+            addMessage('assistant', 'Settings reset to defaults!');
+        }
+
+        // Update range displays
+        function updateRangeDisplays() {
+            document.getElementById('speed-value').textContent = document.getElementById('voice-speed').value + 'x';
+            document.getElementById('pitch-value').textContent = document.getElementById('voice-pitch').value + 'x';
+            document.getElementById('sensitivity-value').textContent = document.getElementById('sensitivity').value;
+        }
+
+        // Expose functions for voice.js integration
+        window.appFunctions = {
+            addMessageToConversation: addMessage,
+            updateUIState: updateUIState,
+            addTypingIndicator: addTypingIndicator,
+            removeTypingIndicator: removeTypingIndicator,
+            clearChat: clearChat
+        };
     </script>
     
-    <!-- 2. Load voice functions first -->
+    <!-- Your existing scripts -->
     <script src="/static/js/voice.js"></script>
-    
-    <!-- 3. Then main app -->
     <script src="/static/js/app.js"></script>
-    
-    <!-- 4. Then UI interactions -->
     <script src="/static/js/ui.js"></script>
-    
-    <!-- 5. External libraries last -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     
-    <!-- 6. Initialize after everything is loaded -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Voice Assistant DOM ready - all scripts loaded');
-            console.log('✅ Voice functions available:', !!window.voiceFunctions);
-            console.log('✅ App functions available:', !!window.appFunctions);
-            console.log('✅ Global state:', !!window.appState);
+            console.log('🚀 Enhanced Voice Assistant DOM ready');
             
-            // Ensure settings panel is hidden on load
-            const settingsPanel = document.getElementById('settings-panel');
-            if (settingsPanel) {
-                settingsPanel.classList.add('hidden');
-                console.log('✅ Settings panel hidden');
-            }
+            // Add range input listeners
+            document.getElementById('voice-speed').addEventListener('input', updateRangeDisplays);
+            document.getElementById('voice-pitch').addEventListener('input', updateRangeDisplays);
+            document.getElementById('sensitivity').addEventListener('input', updateRangeDisplays);
             
-            // Add direct click handler to voice orb as backup
-            const voiceOrb = document.querySelector('.voice-orb');
-            if (voiceOrb) {
-                voiceOrb.addEventListener('click', function() {
-                    console.log('🎤 Voice orb clicked');
-                    
-                    // Try multiple ways to start listening
-                    if (window.voiceFunctions && window.voiceFunctions.startListening) {
-                        console.log('Using voiceFunctions.startListening');
-                        window.voiceFunctions.startListening();
-                    } else if (window.startListening) {
-                        console.log('Using window.startListening');
-                        window.startListening();
-                    } else {
-                        console.error('❌ No startListening function available');
-                        console.log('Available functions:', Object.keys(window));
-                    }
-                });
-                console.log('✅ Voice orb click handler added');
-            }
+            // Initialize range displays
+            updateRangeDisplays();
             
-            // Add settings button handler
-            const settingsButton = document.querySelector('.settings-button');
-            if (settingsButton) {
-                settingsButton.addEventListener('click', function() {
-                    console.log('⚙️ Settings button clicked');
-                    const panel = document.getElementById('settings-panel');
-                    if (panel) {
-                        panel.classList.remove('hidden');
-                    }
-                });
-                console.log('✅ Settings button handler added');
-            }
+            // Wait for voice.js to initialize, then integrate
+            setTimeout(() => {
+                console.log('🎤 Checking voice.js integration...');
+                if (window.voiceFunctions) {
+                    console.log('✅ Voice.js functions available');
+                    // Voice.js will handle orb clicks via its own setupVoiceOrbClickHandler
+                } else {
+                    console.log('⚠️ Voice.js not available, using fallback');
+                }
+                
+                if (window.sendCommandFallback) {
+                    console.log('✅ Voice.js command API available');
+                } else {
+                    console.log('⚠️ Voice.js command API not available');
+                }
+            }, 1000);
             
-            // Add close settings handler
-            const closeSettings = document.getElementById('close-settings');
-            if (closeSettings) {
-                closeSettings.addEventListener('click', function() {
-                    console.log('❌ Close settings clicked');
-                    const panel = document.getElementById('settings-panel');
-                    if (panel) {
-                        panel.classList.add('hidden');
-                    }
-                });
-                console.log('✅ Close settings handler added');
-            }
-            
-            console.log('🎉 Voice Assistant initialization complete!');
+            console.log('✅ Enhanced Voice Assistant initialization complete!');
         });
         
-        // Error handling
         window.addEventListener('error', function(e) {
             console.error('🚨 JavaScript Error:', e.error);
-            console.error('🔍 Error details:', e.filename, e.lineno, e.colno);
         });
     </script>
 </body>

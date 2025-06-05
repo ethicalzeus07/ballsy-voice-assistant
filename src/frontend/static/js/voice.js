@@ -1,168 +1,173 @@
 /**
  * Complete Voice Assistant with Speech Recognition AND Speech Synthesis
  * Now with "Ballsy" personality and voice responses
+ *
+ * This version uses “one‐shot” (non‐continuous) recognition, so it only fires
+ * a single final result when you stop speaking. It no longer auto‐restarts itself.
  */
 
+
 // Configuration
-const SPEECH_TIMEOUT = 10000; // 10 seconds max
-const CLICK_DEBOUNCE = 2000; // 2 seconds between clicks
+const SPEECH_TIMEOUT = 10000; // (not actively used)
+const CLICK_DEBOUNCE = 2000;  // 2 seconds between orb clicks
+
+// Determine API and WebSocket endpoints dynamically based on the page origin
+const origin       = window.location.origin; // e.g., "https://ballsy.onrender.com"
+const API_BASE_URL = origin;                 // “/api/…” will be relative to this
+// We are not using WebSockets in this file, but kept here for reference in case you switch to WS:
+const WS_BASE_URL  = origin.startsWith("https://")
+    ? "wss://" + window.location.host
+    : "ws://"  + window.location.host;
 
 // State
-let speechRecognition = null;
-let speechSynthesis = window.speechSynthesis;
-let isListening = false;
-let isInitializing = false;
-let isSpeaking = false;
-let speechTimeout = null;
-let lastClickTime = 0;
-let clickHandlerAttached = false;
+let speechRecognition      = null;
+let speechSynthesis        = window.speechSynthesis;
+let isListening            = false;
+let isInitializing         = false;
+let isSpeaking             = false;
+let speechTimeout          = null;
+let lastClickTime          = 0;
+let clickHandlerAttached   = false;
 
-// Voice settings (matching your main.py)
+// Voice settings (matching your backend defaults)
 let voiceSettings = {
-    voice: 'Daniel',
-    rate: 1.0,
+    voice: 'Samantha',
+    rate:  1.0,
     pitch: 1.0,
-    volume: 1.0
+    volume:1.0
 };
+
 
 /**
  * Initialize text-to-speech
+ * Loads and caches available voices.
  */
 function initTextToSpeech() {
     if (!speechSynthesis) {
         console.warn('❌ Text-to-speech not supported');
         return false;
     }
-    
-    // Load voices
+
+    // Load voices; Chrome may load them asynchronously
     let voices = speechSynthesis.getVoices();
-    
-    // If voices not loaded yet, wait for them
     if (voices.length === 0) {
         speechSynthesis.onvoiceschanged = () => {
             voices = speechSynthesis.getVoices();
             console.log('🔊 Voices loaded:', voices.length);
         };
+    } else {
+        console.log('🔊 Voices already available:', voices.length);
     }
-    
+
     console.log('🔊 Text-to-speech initialized');
     return true;
 }
 
+
 /**
- * Speak text using browser's text-to-speech
+ * Speak text using browser's text-to-speech API
  */
 function speakText(text) {
     if (!speechSynthesis || isSpeaking) {
         console.log('Speech synthesis not available or already speaking');
         return;
     }
-    
+
     // Cancel any ongoing speech
     speechSynthesis.cancel();
-    
+
     // Create utterance
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Configure voice
+
+    // Select a voice (prefer “Daniel” if available)
     const voices = speechSynthesis.getVoices();
-    const voice = voices.find(v => v.name.includes('Daniel')) || 
-                 voices.find(v => v.name.includes('Male')) ||
-                 voices.find(v => v.lang.startsWith('en-')) || 
-                 voices[0];
-    
+    const voice = voices.find(v => v.name.includes('Daniel')) ||
+                  voices.find(v => v.name.includes('Male'))    ||
+                  voices.find(v => v.lang.startsWith('en-'))  ||
+                  voices[0];
+
     if (voice) {
         utterance.voice = voice;
     }
-    
-    utterance.rate = voiceSettings.rate;
-    utterance.pitch = voiceSettings.pitch;
+    utterance.rate   = voiceSettings.rate;
+    utterance.pitch  = voiceSettings.pitch;
     utterance.volume = voiceSettings.volume;
-    
+
     // Event handlers
     utterance.onstart = () => {
         console.log('🔊 Started speaking:', text);
         isSpeaking = true;
         updateUIStateFallback('speaking');
     };
-    
     utterance.onend = () => {
         console.log('🔊 Finished speaking');
         isSpeaking = false;
         updateUIStateFallback('idle');
     };
-    
     utterance.onerror = (event) => {
         console.error('🔊 Speech error:', event.error);
         isSpeaking = false;
         updateUIStateFallback('idle');
     };
-    
+
     // Speak
     speechSynthesis.speak(utterance);
 }
 
+
 /**
  * Initialize browser speech recognition
+ * Uses one-shot (non-continuous) mode so it only fires once per spoken phrase.
  */
 function initSpeechRecognition() {
     if (speechRecognition) {
         console.log('🎤 Speech recognition already initialized');
         return true;
     }
-    
+
     console.log('🎤 Initializing speech recognition...');
-    
-    // Check if browser supports speech recognition
+
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         console.error('❌ Speech recognition not supported');
         return false;
     }
-    
-    // Create speech recognition instance
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     speechRecognition = new SpeechRecognition();
-    
-    // Configure speech recognition
-    speechRecognition.continuous = false;
-    speechRecognition.interimResults = false;
-    speechRecognition.lang = 'en-US';
+
+    // CONFIGURE for one-shot recognition:
+    speechRecognition.continuous      = false;  // listen once, then end
+    speechRecognition.interimResults  = false;  // only final result
+    speechRecognition.lang            = 'en-US';
     speechRecognition.maxAlternatives = 1;
-    
-    // Event handlers
+
+    // When recognition starts:
     speechRecognition.onstart = function() {
-        console.log('🎤 Speech recognition started successfully');
-        isListening = true;
+        console.log('🎤 Speech recognition started (one-shot)');
+        isListening    = true;
         isInitializing = false;
         updateUIStateFallback('listening');
     };
-    
+
+    // Only one final result will fire when you pause:
     speechRecognition.onresult = function(event) {
+        // event.results[0][0] is the full transcript of your speech until pause
         const transcript = event.results[0][0].transcript.trim();
-        console.log('🎯 Speech recognized:', transcript);
-        
-        if (transcript) {
-            // Add user message to conversation
-            addMessageToConversationFallback('user', transcript);
-            
-            // Update UI to processing
-            updateUIStateFallback('processing');
-            
-            // Send command to backend
-            setTimeout(() => {
-                sendCommandFallback(transcript);
-            }, 200);
-        }
+        console.log('🎯 Full transcript:', transcript);
+
+        // Send the entire phrase as a command immediately
+        addMessageToConversationFallback('user', transcript);
+        updateUIStateFallback('processing');
+        sendCommandFallback(transcript);
     };
-    
+
     speechRecognition.onerror = function(event) {
         console.error('❌ Speech recognition error:', event.error);
-        isListening = false;
+        isListening    = false;
         isInitializing = false;
-        
+
         let message = 'I couldn\'t start listening. Please try again.';
-        
-        switch(event.error) {
+        switch (event.error) {
             case 'no-speech':
                 message = 'I didn\'t hear anything. Please try again.';
                 break;
@@ -180,76 +185,69 @@ function initSpeechRecognition() {
                 updateUIStateFallback('idle');
                 return;
         }
-        
+
         addMessageToConversationFallback('assistant', message);
-        speakText(message); // Speak the error message
+        speakText(message);
         updateUIStateFallback('idle');
     };
-    
+
+    // When recognition ends (either after onresult or error), do NOT restart automatically
     speechRecognition.onend = function() {
-        console.log('🛑 Speech recognition ended');
-        isListening = false;
+        console.log('🛑 Speech recognition ended (one-shot).');
+        isListening    = false;
         isInitializing = false;
-        clearTimeout(speechTimeout);
         updateUIStateFallback('idle');
+
+        // We removed the automatic restart here so Ballsy stops until user clicks again.
+        // If you ever want to re-enable continuous listening, uncomment the next line:
+        // speechRecognition.start();
     };
-    
+
     console.log('✅ Speech recognition initialized successfully');
     return true;
 }
+
 
 /**
  * Start listening with proper state management
  */
 async function startListening() {
     const now = Date.now();
-    
-    // Debounce clicks
+    // Debounce repeated clicks
     if (now - lastClickTime < CLICK_DEBOUNCE) {
         console.log('⚠️ Click debounced, too soon');
         return;
     }
     lastClickTime = now;
-    
-    console.log('🎤 startListening called');
-    
-    // Stop any ongoing speech
+
+    console.log('🎤 startListening (one-shot) called');
+
+    // If currently speaking, cancel that
     if (isSpeaking) {
         speechSynthesis.cancel();
         isSpeaking = false;
     }
-    
-    // Check current state
+
+    // Already listening or initializing?
     if (isListening || isInitializing) {
         console.log('⚠️ Already listening or initializing');
         return;
     }
-    
+
     // Initialize if needed
     if (!speechRecognition && !initSpeechRecognition()) {
         console.log('❌ Could not initialize speech recognition');
         return;
     }
-    
+
     try {
         isInitializing = true;
         console.log('🎯 Starting speech recognition...');
-        
-        // Set timeout
-        speechTimeout = setTimeout(() => {
-            if (isListening || isInitializing) {
-                console.log('⏰ Speech timeout');
-                stopListening();
-            }
-        }, SPEECH_TIMEOUT);
-        
-        // Start recognition
         speechRecognition.start();
-        
     } catch (error) {
-        console.error('❌ Error starting speech:', error);
+        console.error('❌ Error starting speech recognition:', error);
         isInitializing = false;
-        isListening = false;
+        isListening    = false;
         const errorMsg = 'I couldn\'t start listening. Please try again.';
         addMessageToConversationFallback('assistant', errorMsg);
         speakText(errorMsg);
@@ -257,12 +255,13 @@ async function startListening() {
     }
 }
 
+
 /**
  * Stop listening
  */
 function stopListening() {
     console.log('🛑 stopListening called');
-    
+
     if (speechRecognition && (isListening || isInitializing)) {
         try {
             speechRecognition.stop();
@@ -270,51 +269,54 @@ function stopListening() {
             console.error('Error stopping speech recognition:', error);
         }
     }
-    
+
     clearTimeout(speechTimeout);
-    isListening = false;
+    isListening    = false;
     isInitializing = false;
     updateUIStateFallback('idle');
 }
 
+
 /**
- * Send command to backend (now with Ballsy personality)
+ * Send command to backend
+ * Uses dynamic API_BASE_URL instead of hardcoded localhost
  */
 async function sendCommandFallback(command) {
     console.log('📤 Sending command to Ballsy:', command);
-    
+
     try {
-        const response = await fetch('http://localhost:8000/api/command', {
+        const response = await fetch(`${API_BASE_URL}/api/command`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 command: command,
-                user_id: 1
+                user_id:  1
             })
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('✅ Ballsy response:', data);
-        
-        // Add response to conversation
+
+        // Display Ballsy’s response in the conversation UI
         addMessageToConversationFallback('assistant', data.response);
-        
-        // SPEAK the response (this was missing!)
+
+        // Speak the response
         speakText(data.response);
-        
-        // Handle actions
+
+        // Handle “open_url” action if provided
         if (data.action === 'open_url' && data.data?.url) {
             window.open(data.data.url, '_blank');
         }
-        
-        // Don't immediately return to idle - let speech finish
-        
+
+        // No need to force‐stop or restart recognition here—
+        // onend will take over once speakText finishes.
+
     } catch (error) {
         console.error('❌ Error sending command:', error);
         const errorMsg = 'Sorry, I had an error. Please try again.';
@@ -324,49 +326,48 @@ async function sendCommandFallback(command) {
     }
 }
 
+
 /**
- * Add message to conversation (fallback)
+ * Add message to conversation UI (fallback)
+ * If main appFunctions.addMessageToConversation is available, use that; otherwise, manually append.
  */
 function addMessageToConversationFallback(sender, text) {
     console.log(`💬 ${sender}: ${text}`);
-    
-    // Try main function first
+
     if (window.appFunctions && window.appFunctions.addMessageToConversation) {
         window.appFunctions.addMessageToConversation(sender, text);
         return;
     }
-    
-    // Fallback: add to conversation history
+
     const conversationHistory = document.getElementById('conversation-history');
     if (conversationHistory) {
         const messageElement = document.createElement('div');
-        messageElement.classList.add('message');
-        messageElement.classList.add(`${sender}-message`);
+        messageElement.classList.add('message', `${sender}-message`);
         messageElement.textContent = text;
         conversationHistory.appendChild(messageElement);
         conversationHistory.scrollTop = conversationHistory.scrollHeight;
     }
 }
 
+
 /**
  * Update UI state (fallback)
+ * Tries window.appFunctions.updateUIState first; otherwise, updates the orb/status manually.
  */
 function updateUIStateFallback(state) {
     console.log('🎨 UI state:', state);
-    
-    // Try main function first
+
     if (window.appFunctions && window.appFunctions.updateUIState) {
         window.appFunctions.updateUIState(state);
         return;
     }
-    
-    // Fallback: update orb and status
+
     const voiceOrb = document.querySelector('.voice-orb');
     if (voiceOrb) {
         voiceOrb.classList.remove('idle', 'listening', 'processing', 'speaking', 'error');
         voiceOrb.classList.add(state);
     }
-    
+
     const statusText = document.getElementById('status-text');
     if (statusText) {
         switch (state) {
@@ -389,55 +390,59 @@ function updateUIStateFallback(state) {
     }
 }
 
+
 /**
- * Setup click handler for voice orb
+ * Setup click handler for the voice orb
  */
 function setupVoiceOrbClickHandler() {
     if (clickHandlerAttached) {
         console.log('Click handler already attached');
         return;
     }
-    
+
     const voiceOrb = document.querySelector('.voice-orb');
     if (!voiceOrb) {
         console.log('Voice orb not found');
         return;
     }
-    
+
     // Remove any existing listeners
     voiceOrb.removeEventListener('click', handleVoiceOrbClick);
-    
+
     // Add new listener
     voiceOrb.addEventListener('click', handleVoiceOrbClick, { passive: true });
     clickHandlerAttached = true;
-    
+
     console.log('✅ Ballsy voice orb click handler attached');
 }
 
+
 /**
  * Handle voice orb click
+ * Toggling between listening, speaking, and idle states
  */
 function handleVoiceOrbClick(event) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     console.log('🎤 Ballsy voice orb clicked');
-    
+
     if (isListening || isInitializing) {
-        console.log('Stopping current session');
+        console.log('Stopping current listening session');
         stopListening();
     } else if (isSpeaking) {
-        console.log('Stopping speech');
+        console.log('Stopping speech synthesis');
         speechSynthesis.cancel();
         isSpeaking = false;
         updateUIStateFallback('idle');
     } else {
-        console.log('Starting new session');
+        console.log('Starting new listening session');
         startListening();
     }
 }
 
-// Make functions available globally
+
+// Expose key functions globally so other scripts (app.js, ui.js) can call them
 window.voiceFunctions = {
     startListening,
     stopListening,
@@ -448,29 +453,31 @@ window.voiceFunctions = {
 };
 
 window.startListening = startListening;
-window.stopListening = stopListening;
-window.speakText = speakText;
+window.stopListening  = stopListening;
+window.speakText      = speakText;
 
-console.log('🎤 Ballsy Voice Assistant loaded successfully');
 
-// Initialize everything when DOM is ready
+// ──────────────────────────────────────────────────────────────────────────────
+
+console.log('🎤 Ballsy Voice Assistant (voice.js) loaded successfully');
+
+// Initialize speech recognition and synthesis when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎤 DOM ready - initializing Ballsy');
-    
-    // Initialize speech recognition and synthesis
+    console.log('🎤 DOM ready - initializing Ballsy voice features');
+
     initSpeechRecognition();
     initTextToSpeech();
-    
-    // Setup click handler after a short delay
+
+    // Attach click handler to the orb after a short delay (allow DOM to settle)
     setTimeout(() => {
         setupVoiceOrbClickHandler();
     }, 500);
-    
-    // Update the title to show "Ballsy"
+
+    // Update the header title to show "Ballsy" instead of generic "Voice Assistant"
     const title = document.querySelector('h1');
     if (title && title.textContent.includes('Voice Assistant')) {
         title.textContent = 'Ballsy - Voice Assistant';
     }
 });
 
-console.log('🎤 Ballsy Voice Assistant script completed');
+console.log('🎤 Ballsy Voice Assistant script initialization complete');
