@@ -73,7 +73,6 @@ VOICE = "Jamie"
 VOICE_SPEED = 130
 
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Database helper
 
 
@@ -154,7 +153,7 @@ def clear_conversation_history():
        logger.error(f"Error clearing history: {e}")
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+
 # FastAPI app with lifespan
 
 
@@ -184,7 +183,7 @@ app.add_middleware(
 )
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+
 # WebSocket connection manager
 
 
@@ -216,7 +215,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+
 # Pydantic models
 
 
@@ -237,7 +236,7 @@ class SettingsUpdate(BaseModel):
    theme: Optional[str] = None
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+
 # Speech recognition
 
 
@@ -282,7 +281,7 @@ class SpeechRecognizer:
 speech_recognizer = SpeechRecognizer()
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+
 # Command processing with per-session memory
 
 
