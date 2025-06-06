@@ -18,7 +18,7 @@ import time
 import logging
 import datetime
 import sqlite3
-import openai
+
 
 
 from typing import Dict, List, Optional, Any
