@@ -69,8 +69,8 @@ SYSTEM_PROMPT = (
    "big brother, and you’re funny but wise."
 )
 DB_PATH = "voice_assistant.db"
-VOICE = "Daniel"
-VOICE_SPEED = 150
+VOICE = "Jamie"
+VOICE_SPEED = 130
 
 
 # ──────────────────────────────────────────────────────────────────────────────

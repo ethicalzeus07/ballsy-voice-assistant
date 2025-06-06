@@ -31,7 +31,7 @@ let clickHandlerAttached   = false;
 
 // Voice settings (matching your backend defaults)
 let voiceSettings = {
-    voice: 'Samantha',
+    voice: 'Jamie(Premium)',
     rate:  1.0,
     pitch: 1.0,
     volume:1.0
@@ -81,7 +81,7 @@ function speakText(text) {
 
     // Select a voice (prefer “Daniel” if available)
     const voices = speechSynthesis.getVoices();
-    const voice = voices.find(v => v.name.includes('Daniel')) ||
+    const voice = voices.find(v => v.name.includes('Jamie')) ||
                   voices.find(v => v.name.includes('Male'))    ||
                   voices.find(v => v.lang.startsWith('en-'))  ||
                   voices[0];

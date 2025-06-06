@@ -8,7 +8,7 @@
 /* 2. Define all the colors and gradients you'll use */
 :root {
     /* ---------- Light Theme Colors ---------- */
-    --bg-color-light: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
+    --bg-color-light: linear-gradient(135deg, #1da8f3 0%, #f77518 100%);
     --surface-color-light: rgba(255, 255, 255, 0.95);                  /* card/overlay backgrounds */
     --text-color-light: #1a1a1a;                                        /* main text */
     --text-secondary-light: #64748b;                                    /* secondary text */
@@ -16,8 +16,8 @@
     --border-color-light: rgba(255, 255, 255, 0.2);                     /* borders */
 
     /* 2.1. Accent colors (blue → orange gradient) */
-    --accent-color-light: #3b82f6; /* plain blue for buttons, highlights */
-    --accent-gradient-light: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
+    --accent-color-light: #2563eb;  /* plain blue for buttons, highlights */
+    --accent-gradient-light: linear-gradient(135deg, #1da8f3 20%, #f77518 100%);
     /* ↑ gradient from blue (#3b82f6) to bright orange (#f97316) */
 
     /* 2.2. Success / error notifications */
@@ -25,7 +25,7 @@
     --error-color-light: #ef4444;
 
     /* 2.3. Voice orb color (blue → orange) */
-    --orb-color-light: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
+    --orb-color-light: linear-gradient(135deg, #1da8f3 0%, #f77518 100%);
     --orb-glow-light: 0 0 40px rgba(59, 130, 246, 0.4); 
     /* ↑ glow matches the blue side (rgba(59,130,246)) */
 
@@ -35,29 +35,46 @@
     --shadow-intense-light: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 
     /* ---------- Dark Theme Colors ---------- */
-    --bg-color-dark: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
-    --surface-color-dark: rgba(30, 30, 46, 0.95);
-    --text-color-dark: #f8fafc;
-    --text-secondary-dark: #94a3b8;
-    --card-bg-dark: rgba(30, 30, 46, 0.8);
-    --border-color-dark: rgba(255, 255, 255, 0.1);
+  /* Background: solid black gradually shifting to neon green */
+    --bg-color-dark: linear-gradient(135deg, #000000 0%, #048a39 100%);
 
-    /* 2.5. Accent colors in dark mode (lighter blue → lighter orange) */
-    --accent-color-dark: #60a5fa; 
-    --accent-gradient-dark: linear-gradient(135deg, #60a5fa 0%, #fb923c 100%);
+    /* Surface / card backgrounds: mostly black with slight translucency */
+    --surface-color-dark: rgba(0, 0, 0, 0.95);
 
-    /* 2.6. Success / error in dark */
-    --success-color-dark: #34d399;
-    --error-color-dark: #f87171;
+    /* Primary text: a bright off-white so it stands out on pure black */
+    --text-color-dark: #e0e0e0;
 
-    /* 2.7. Voice orb color in dark (blue → orange) */
-    --orb-color-dark: linear-gradient(135deg, #60a5fa 0%, #fb923c 100%);
-    --orb-glow-dark: 0 0 50px rgba(96, 165, 250, 0.5);
+    /* Secondary text: a muted gray-green to harmonize with neon accent */
+    --text-secondary-dark: #aacCAA;  /* you can fine-tune to any light‐green/gray */
 
-    /* 2.8. Shadows in dark */
-    --shadow-dark: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
-                  0 10px 10px -5px rgba(0, 0, 0, 0.2);
-    --shadow-intense-dark: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    /* Message bubble background: nearly black but slightly see-through */
+    --card-bg-dark: rgba(0, 0, 0, 0.8);
+
+    /* Thin borders: very faint greenish-white */
+    --border-color-dark: rgba(5, 178, 74, 0.2);
+
+    /* Accent color: pure neon green */
+    --accent-color-dark: #05b24a;
+
+    /* Accent gradient: black → neon green for buttons, highlights, etc. */
+    --accent-gradient-dark: linear-gradient(135deg, #000000 0%, #03a443 100%);
+
+    /* Success & error (adjusted to match neon palette) */
+    --success-color-dark: #00ff7f;  /* a bright “spring green” */
+    --error-color-dark:   #ff5555;  /* a neon‐red for errors */
+
+    /* Voice‐orb background (neon‐green glow) */
+    --orb-color-dark: linear-gradient(135deg, #04492e 0%, #00aa55 100%);
+
+    --orb-glow-dark: 0 0 30px rgba(4, 147, 61, 0.8);
+
+    /* Shadows under elements (darker, tinted green) */
+    --shadow-dark: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.5),
+        0 10px 10px -5px rgba(5, 178, 74, 0.3);
+    --shadow-intense-dark:
+        0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    
 
     /* ---------- Default Theme = Light ---------- */
     --bg-color: var(--bg-color-light);
@@ -102,22 +119,24 @@
 
 /* ====== Dark Theme Class: switches all variables over ====== */
 body.dark-theme {
-    --bg-color: var(--bg-color-dark);
-    --surface-color: var(--surface-color-dark);
-    --text-color: var(--text-color-dark);
-    --text-secondary: var(--text-secondary-dark);
-    --card-bg: var(--card-bg-dark);
-    --border-color: var(--border-color-dark);
-    --accent-color: var(--accent-color-dark);
-    --accent-gradient: var(--accent-gradient-dark);
-    --success-color: var(--success-color-dark);
-    --error-color: var(--error-color-dark);
-    --orb-color: var(--orb-color-dark);
-    --orb-glow: var(--orb-glow-dark);
-    --shadow: var(--shadow-dark);
-    --shadow-intense: var(--shadow-intense-dark);
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-color:          var(--bg-color-dark);
+  --surface-color:     var(--surface-color-dark);
+  --text-color:        var(--text-color-dark);
+  --text-secondary:    var(--text-secondary-dark);
+  --card-bg:           var(--card-bg-dark);
+  --border-color:      var(--border-color-dark);
+  --accent-color:      var(--accent-color-dark);
+  --accent-gradient:   var(--accent-gradient-dark);
+  --success-color:     var(--success-color-dark);
+  --error-color:       var(--error-color-dark);
+  --orb-color:         var(--orb-color-dark);
+  --orb-glow:          var(--orb-glow-dark);
+  --shadow:            var(--shadow-dark);
+  --shadow-intense:    var(--shadow-intense-dark);
+
+  /* For any glass‐like or translucent overlays, we might pick a very dark tint */
+  --glass-bg:    rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(5, 178, 74, 0.2);
 }
 
 /* ====== Reset & Base Styles ====== */
@@ -151,6 +170,7 @@ body::before {
     width: 100%;
     height: 100%;
     background: var(--bg-color);
+    filter: brightness(1.1) saturate(1.1);
     z-index: -1;
 }
 
@@ -181,6 +201,7 @@ input, select {
 
 /* ====== Layout Containers ====== */
 .app-container {
+    filter: brightness(1.2) saturate(1.2);
     max-width: 100%;
     width: 100%;
     height: 100vh;
@@ -190,8 +211,12 @@ input, select {
     position: relative;
     padding: var(--spacing-md);
 }
+.vibrant-mode {
+    filter: brightness(1.3) saturate(1.5) contrast(1.1);
+}
 
 .assistant-container {
+    
     background: var(--surface-color);
     backdrop-filter: var(--backdrop-blur);
     -webkit-backdrop-filter: var(--backdrop-blur);
@@ -361,13 +386,16 @@ input, select {
 
 /* ====== Conversation Container (scrollable) ====== */
 .conversation-container {
+    display: flex;             /* ← add this line */
+    flex-direction: column;    /* ← and this line */
     flex: 1;
     max-height: 350px;
-    overflow-y: auto;
+    /* overflow-y: auto; */
     padding: var(--spacing-lg);
     background: transparent;
     position: relative;
 }
+
 
 .conversation-container::-webkit-scrollbar {
     width: 6px;
@@ -398,6 +426,8 @@ input, select {
     border: 1px solid var(--border-color);
     min-height: 200px;
     position: relative;
+    flex: 1;              /* so it stretches to fill its parent vertically */
+    overflow-y: auto; 
 }
 
 #conversation-history:empty::before {
@@ -517,17 +547,7 @@ input, select {
     animation: pulse-ring 3s infinite ease-out;
 }
 
-.ring1 {
-    width: 150px;
-    height: 150px;
-    animation-delay: 0s;
-}
 
-.ring2 {
-    width: 190px;
-    height: 190px;
-    animation-delay: 1s;
-}
 
 @keyframes pulse-ring {
     0% { transform: scale(0.8); opacity: 0.7; }
@@ -906,7 +926,7 @@ input, select {
         width: 48px;
         height: 48px;
     }
-}
+
 
 @media print {
     .assistant-container {
@@ -969,4 +989,214 @@ body.dark-theme .voice-orb {
 
 body.dark-theme #conversation-history {
     background: rgba(0, 0, 0, 0.2);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ====== Enhanced State Animations ====== */
+
+/* 1. IDLE STATE - Gentle breathing effect */
+.voice-orb.idle .orb-inner {
+    animation: gentleBreathing 3s ease-in-out infinite;
+}
+
+@keyframes gentleBreathing {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: var(--orb-glow);
+        filter: brightness(1);
+    }
+    50% { 
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        filter: brightness(1.1);
+    }
+}
+
+/* 2. LISTENING STATE - Intense pulsing + glowing rings */
+.voice-orb.listening .orb-inner {
+    animation: listeningPulse 1s ease-in-out infinite;
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.8) !important;
+}
+
+@keyframes listeningPulse {
+    0%, 100% { 
+        transform: scale(1);
+        filter: brightness(1.2) saturate(1.3);
+    }
+    50% { 
+        transform: scale(1.1);
+        filter: brightness(1.5) saturate(1.5);
+    }
+}
+
+/* Enhanced listening rings - more visible */
+.voice-orb.listening .status-ring {
+    border-color: #3b82f6;
+    animation: listeningWaves 1.5s infinite ease-out;
+}
+
+@keyframes listeningWaves {
+    0% { 
+        transform: scale(0.8); 
+        opacity: 0.8;
+        border-width: 3px;
+    }
+    100% { 
+        transform: scale(1.8); 
+        opacity: 0;
+        border-width: 1px;
+    }
+}
+
+/* 3. PROCESSING STATE - Spinning with color shifts */
+.voice-orb.processing .orb-inner {
+    animation: processingSpinner 2s linear infinite;
+}
+
+@keyframes processingSpinner {
+    0% { 
+        transform: rotate(0deg) scale(1);
+        filter: hue-rotate(0deg) brightness(1.2);
+    }
+    50% { 
+        transform: rotate(180deg) scale(0.95);
+        filter: hue-rotate(90deg) brightness(1.4);
+    }
+    100% { 
+        transform: rotate(360deg) scale(1);
+        filter: hue-rotate(0deg) brightness(1.2);
+    }
+}
+
+/* 4. SPEAKING STATE - Rhythmic bouncing */
+.voice-orb.speaking .orb-inner {
+    animation: speakingBounce 0.8s ease-in-out infinite;
+}
+
+@keyframes speakingBounce {
+    0%, 100% { 
+        transform: scale(1) translateY(0);
+        filter: brightness(1.3);
+    }
+    25% { 
+        transform: scale(1.05) translateY(-3px);
+        filter: brightness(1.5);
+    }
+    75% { 
+        transform: scale(1.02) translateY(3px);
+        filter: brightness(1.4);
+    }
+}/* Particle animations for different states */
+.voice-orb.listening .particle {
+    animation: listeningParticles 2s infinite ease-in-out;
+    width: 6px;
+    height: 6px;
+}
+
+@keyframes listeningParticles {
+    0%, 100% { 
+        transform: translateY(0) scale(1);
+        opacity: 0.6;
+    }
+    50% { 
+        transform: translateY(-15px) scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Status text color changes */
+.voice-orb.idle + .voice-status #status-text {
+    color: var(--text-secondary);
+}
+
+.voice-orb.listening + .voice-status #status-text {
+    color: #3b82f6;
+    animation: textPulse 1s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.voice-orb.processing + .voice-status #status-text {
+    color: #f97316;
+}
+
+.voice-orb.speaking + .voice-status #status-text {
+    color: #10b981;
+}
+/* Orb color changes for clear state indication */
+.voice-orb.idle .orb-inner {
+    background: var(--orb-color);
+}
+
+.voice-orb.listening .orb-inner {
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+}
+
+.voice-orb.processing .orb-inner {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+}
+
+.voice-orb.speaking .orb-inner {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+/* Sound wave effect around orb when listening */
+.voice-orb.listening::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-radius: 50%;
+    animation: soundWave 1s ease-out infinite;
+    top: -50%;
+    left: -50%;
+}
+
+@keyframes soundWave {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
 }

@@ -305,7 +305,7 @@ function addMessageToConversation(sender, text) {
     conversationHistory.appendChild(messageElement);
     
     // Scroll to bottom
-    conversationHistory.scrollTop = conversationHistory.scrollHeight;
+    scrollToBottom();
 }
 
 /**
@@ -520,3 +520,17 @@ window.appFunctions = {
     addMessageToConversation,
     saveSettings
 };
+
+/**
+ * Helper: Scroll the chat to the bottom
+ */
+function scrollToBottom() {
+    const conversationHistory = document.getElementById('conversation-history');
+    if (conversationHistory) {
+        // Wait a tiny bit so the new message finishes rendering,
+        // then scroll to the very bottom.
+        setTimeout(() => {
+            conversationHistory.scrollTop = conversationHistory.scrollHeight;
+        }, 50);
+    }
+}
