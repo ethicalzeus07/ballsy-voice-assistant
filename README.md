@@ -1,355 +1,330 @@
-# 🎤 Ballsy - AI Voice Assistant
+# 🎤 Ballsy Voice Assistant
 
-**Ballsy** is a full-stack Python-based voice assistant with a beautiful Siri-like UI. Built with a FastAPI backend and a modern web frontend, Ballsy provides intelligent voice interactions powered by Mistral AI.
+A full-stack AI voice assistant with a Siri-like UI, powered by Mistral AI. Ballsy combines natural language processing, speech recognition, and intelligent command execution to provide a seamless voice interaction experience.
 
-![Ballsy Voice Assistant](https://img.shields.io/badge/Voice%20Assistant-Ballsy-blue?style=for-the-badge&logo=microphone)
-![Python](https://img.shields.io/badge/Python-3.8+-blue?style=flat-square&logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=flat-square&logo=javascript)
-
----
-
-## 🔗 Live Demo
-
-👉 [Try Ballsy Online!](https://ballsy.onrender.com)  
-
----
+![Ballsy Voice Assistant](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![Python](https://img.shields.io/badge/Python-3.8+-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green)
+![Mistral AI](https://img.shields.io/badge/Mistral%20AI-0.4+-purple)
 
 ## ✨ Features
 
 ### 🎯 Core Capabilities
-- **🎙️ Voice Recognition** – Real-time speech-to-text using browser APIs  
-- **🔊 Voice Synthesis** – Natural text-to-speech responses  
-- **🤖 AI Integration** – Powered by Mistral AI for intelligent conversations  
-- **🧮 Math Calculator** – Built-in mathematical expression evaluation  
-- **⏰ Time & Date** – Current time and date information  
-- **🌐 Web Integration** – Open websites and search the internet  
+- **Voice Recognition**: Real-time speech-to-text with noise cancellation
+- **AI-Powered Responses**: Intelligent conversations using Mistral AI
+- **Command Processing**: Execute various commands and actions
+- **Math Calculations**: Handle mathematical expressions and calculations
+- **Web Integration**: Open websites, search engines, and streaming services
+- **App Control**: Launch applications and services
 
-### 🚀 Advanced Features
-- **📱 App Control** – Open and manage applications (macOS support)  
-- **🎵 Streaming Services** – Quick access to Netflix, Spotify, YouTube, etc.  
-- **🗺️ Maps & Directions** – Google Maps integration for navigation  
-- **📰 News Search** – Latest news on any topic  
-- **📧 Email Access** – Quick access to Gmail, Outlook, Yahoo Mail  
-- **🎯 Smart Search** – Intelligent web searches with contextual results  
+### 🎨 Siri-like UI
+- **Animated Voice Orb**: Dynamic visual feedback for voice interactions
+- **Real-time Status**: Visual indicators for listening, processing, and responding states
+- **Dark/Light Mode**: Toggle between themes for comfortable usage
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Fluid Animations**: Smooth transitions and micro-interactions
 
-### 💫 User Experience
-- **🎨 Siri-like UI** – Beautiful, animated voice orb interface  
-- **🌓 Dark/Light Themes** – Customizable appearance  
-- **📱 Responsive Design** – Works on desktop and mobile  
-- **💬 Conversation History** – Persistent chat memory  
-- **⚙️ Customizable Settings** – Voice, speed, and theme preferences  
-
----
-
-## 🏗️ Architecture
-
-### Backend (FastAPI)
-- **🐍 Python 3.8+** with FastAPI framework  
-- **🤖 Mistral AI** integration for natural language processing  
-- **🎙️ Speech Recognition** using Google Speech API (via `speech_recognition`)  
-- **💾 SQLite Database** for conversation history and settings  
-- **🔌 WebSocket Support** for real-time communication  
-- **📡 RESTful API** endpoints for all functionality  
-
-### Frontend (Modern Web)
-- **🌐 HTML5/CSS3/JavaScript** with modern ES6+ features  
-- **🎨 CSS Animations** for smooth, Siri-like transitions  
-- **🎙️ Web Speech API** for browser-based voice recognition  
-- **🔊 Speech Synthesis API** for text-to-speech  
-- **📱 Responsive Design** using CSS Grid and Flexbox  
-
----
+### 🔧 Smart Commands
+- **Media Services**: "Play [song] on Spotify", "Watch [movie] on Netflix"
+- **Web Search**: "Search for [topic] on Google", "Find [location] on Maps"
+- **Information Queries**: "Who is [person]", "What is [concept]"
+- **Time & Date**: "What time is it", "What's today's date"
+- **Math Operations**: "What's 15 + 27", "Calculate 50 * 3"
+- **App Launching**: "Open Gmail", "Open YouTube"
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher  
-- Modern web browser (Chrome, Firefox, Edge, Safari)  
-- Microphone access  
-- Internet connection  
+- Python 3.8 or higher
+- Microphone access
+- Internet connection
+- Mistral AI API key
 
-### Local Installation
+### Installation
 
-1. **Clone the repository**  
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
-   cd ballsy-voice-assistant
+   git clone <repository-url>
+   cd Ballsy_1
    ```
 
-2. **Create and activate a Python virtual environment**
-
+2. **Create virtual environment**
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate           # macOS/Linux
-   # OR venv\Scripts\activate          # Windows
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies**
-
    ```bash
-   pip install .
+   pip install -e .
    ```
 
-4. **Set your Mistral API key**
-   Create a file named `.env` in the project root with the following line:
-
+4. **Set up environment variables**
+   ```bash
+   # Create .env file
+   echo "MISTRAL_API_KEY=your_mistral_api_key_here" > .env
    ```
-   MISTRAL_API_KEY=your_actual_mistral_api_key_here
-   ```
 
-5. **Run Ballsy locally**
-
+5. **Run the application**
    ```bash
    python run.py
    ```
 
-   * Open your browser at [http://localhost:8000](http://localhost:8000).
-   * Speak or type a command (e.g., "Hello") and watch Ballsy reply!
+6. **Access the application**
+   Open your browser and navigate to `http://localhost:8000`
 
----
+## 🏗️ Architecture
 
-## 🎯 Usage
+### Backend (FastAPI)
+- **Voice Processing**: Speech recognition with Google Speech-to-Text
+- **AI Integration**: Mistral AI for natural language understanding
+- **Command Engine**: Intelligent command parsing and execution
+- **WebSocket Support**: Real-time communication with frontend
+- **Database**: SQLite for conversation history and user settings
+
+### Frontend (HTML/CSS/JavaScript)
+- **Siri-like Interface**: Modern, responsive UI with animations
+- **Voice Visualization**: Dynamic orb with status indicators
+- **Real-time Updates**: WebSocket communication for live feedback
+- **Theme Support**: Dark and light mode toggle
+- **Mobile Responsive**: Optimized for all device sizes
+
+### Key Components
+```
+src/
+├── backend/
+│   └── app.py              # FastAPI application with all endpoints
+├── frontend/
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── styles.css  # Main stylesheet with animations
+│   │   └── js/
+│   │       ├── app.js      # Main application logic
+│   │       ├── ui.js       # UI interactions and animations
+│   │       └── voice.js    # Voice processing and WebSocket handling
+│   └── templates/
+│       └── index.html      # Main HTML template
+```
+
+## 🎮 Usage
 
 ### Voice Commands
 
-Ballsy responds to natural language. Try these commands:
+#### Basic Interaction
+- **"Hello"** - Greet Ballsy
+- **"What's your name?"** - Learn about Ballsy
+- **"How are you?"** - Check Ballsy's status
 
-#### 🗣️ Basic Interaction
+#### Information Queries
+- **"Who is [person]?"** - Get information about people
+- **"What is [concept]?"** - Learn about topics
+- **"Tell me about [subject]"** - Detailed information
 
-* **"Hello"** → Greeting and introduction
-* **"What's your name?"** → Ballsy introduces itself
-* **"How are you?"** → Status response
-* **"Goodbye"** → Farewell message
+#### Math Operations
+- **"What's 25 + 15?"** - Basic arithmetic
+- **"Calculate 100 * 3"** - Mathematical expressions
+- **"+ 10"** - Continue calculations from previous result
 
-#### 🧮 Mathematics
+#### Media & Entertainment
+- **"Play [song] on Spotify"** - Search and open Spotify
+- **"Watch [movie] on Netflix"** - Search Netflix
+- **"Open YouTube"** - Launch YouTube
+- **"Search for [topic] on Google"** - Web search
 
-* **"What's 25 plus 17?"** → Mathematical calculations
-* **"Calculate 144 divided by 12"** → Advanced math
-* **"What's 15 percent of 200?"** → Percentage calculations
+#### Productivity
+- **"Open Gmail"** - Launch email
+- **"What time is it?"** - Get current time
+- **"What's today's date?"** - Get current date
+- **"Open Maps"** - Launch Google Maps
 
-#### ⏰ Time & Information
+#### Navigation & Search
+- **"Find [location] on Maps"** - Search locations
+- **"Directions to [place]"** - Get directions
+- **"Search for [topic] on [platform]"** - Platform-specific searches
 
-* **"What time is it?"** → Current time
-* **"What's today's date?"** → Current date
+### UI Controls
 
-#### 🌐 Web & Search
+#### Voice Activation
+- **Click the animated orb** to start voice recording
+- **Speak your command** clearly into the microphone
+- **Wait for processing** and visual feedback
+- **Listen to the response** or read the text
 
-* **"Search for electric cars"** → Google search
-* **"Who is Elon Musk?"** → AI-powered information
-* **"What is machine learning?"** → Intelligent explanations
+#### Manual Input
+- **Type commands** in the text input field
+- **Press Enter** to submit
+- **View responses** in the conversation history
 
-#### 🎵 Entertainment & Apps
+#### Settings
+- **Toggle dark/light mode** using the moon/sun button
+- **Adjust voice settings** through the API
+- **View conversation history** in the chat area
 
-* **"Open YouTube"** → Launch YouTube
-* **"Find Stranger Things on Netflix"** → Search Netflix
-* **"Play Taylor Swift on Spotify"** → Open Spotify search
-* **"Open Chrome"** → Launch Google Chrome
-
-#### 🗺️ Navigation & Location
-
-* **"Directions to Central Park"** → Google Maps directions
-* **"Find coffee shops near me"** → Location-based search
-* **"Show me Paris on maps"** → Maps location search
-
-#### 📰 News & Information
-
-* **"Latest news on climate change"** → Current news search
-* **"What's happening in technology?"** → Tech news
-
-### 💻 Text Input Alternative
-
-* Click the keyboard icon in the UI to toggle text input mode. Type your command and press Enter.
-
----
-
-## ⚙️ Configuration
-
-### Settings Panel
-
-Access via the gear icon in the UI. Available settings:
-
-* **🎙️ Voice Selection** – Choose from system voices (e.g., "Daniel," "Samantha").
-* **⚡ Speech Rate** – Adjust speaking speed (120–250 WPM).
-* **🎨 Theme** – Light, Dark, or System default.
-* **🎨 Accent Colors** – Blue, Purple, Green, Orange.
-* **🎙️ Microphone Sensitivity** – Adjust voice detection threshold.
-* **🔄 Auto-listen** – Automatically listen after responses.
+## 🔧 Configuration
 
 ### Environment Variables
-
-* The `.env` file in the project root should contain your Mistral API key:
-
-  ```env
-  MISTRAL_API_KEY=your_actual_mistral_api_key_here
-  ```
-
----
-
-## 📁 Project Structure
-
-```
-ballsy-voice-assistant/
-├── README.md
-├── run.py                         # Entrypoint for local and Render deployment
-├── pyproject.toml                 # Python project configuration and dependencies
-├── .env                           # Environment variables (Mistral API key)
-├── docs/                          # Optional: screenshots or additional docs
-│   ├── screenshot-ballsy1.png
-│   └── screenshot-ballsy2.png
-└── src/
-    ├── backend/
-    │   └── app.py                 # FastAPI backend (serves API + frontend)
-    └── frontend/
-        ├── templates/
-        │   └── index.html         # Main UI template
-        └── static/
-            ├── css/
-            │   └── styles.css      # Siri-like UI styling
-            └── js/
-                ├── app.js          # Main application logic
-                ├── ui.js           # UI interactions
-                └── voice.js        # Voice processing
-```
-
----
-
-## 🧪 Testing
-
-Run the comprehensive test suite:
-
 ```bash
-python test.py
+# Required
+MISTRAL_API_KEY=your_mistral_api_key_here
+
+# Optional
+HOST=0.0.0.0
+PORT=8000
 ```
 
-Tests include:
+### API Endpoints
 
-* ✅ Backend API functionality
-* ✅ Command processing accuracy
-* ✅ AI response quality
-* ✅ Mathematical calculations
-* ✅ Settings management
-* ✅ WebSocket communication
+#### Voice Processing
+- `POST /api/voice` - Process voice commands
+- `POST /api/command` - Process text commands
+- `WebSocket /ws/voice/{client_id}` - Real-time voice communication
 
----
+#### User Management
+- `GET /api/settings/{user_id}` - Get user settings
+- `PUT /api/settings/{user_id}` - Update user settings
+- `GET /api/history/{user_id}` - Get command history
+
+### Database Schema
+- **Users**: User profiles and authentication
+- **Conversations**: Conversation history
+- **Messages**: Individual message records
+- **Settings**: User preferences
+- **Command History**: Executed commands and results
 
 ## 🛠️ Development
 
-### Adding New Commands
+### Project Structure
+```
+Ballsy_1/
+├── main.py                 # Replit deployment launcher
+├── run.py                  # Production deployment entry point
+├── pyproject.toml         # Project dependencies and metadata
+├── src/
+│   ├── backend/
+│   │   └── app.py         # FastAPI application
+│   └── frontend/
+│       ├── static/        # CSS, JS, and assets
+│       └── templates/     # HTML templates
+├── architecture_design.md # Detailed architecture documentation
+├── todo.md               # Development progress tracking
+└── user_guide.md         # User documentation
+```
 
-1. Edit the `CommandProcessor` class in `src/backend/app.py`.
-2. Add or modify command patterns within `process_command()` to handle new phrases.
+### Key Dependencies
+- **FastAPI**: High-performance web framework
+- **Mistral AI**: Advanced language model integration
+- **SpeechRecognition**: Speech-to-text processing
+- **WebSockets**: Real-time communication
+- **SQLite**: Lightweight database
+- **Jinja2**: Template engine
 
-### Extending AI Capabilities
+### Development Setup
+1. **Install development dependencies**
+   ```bash
+   pip install -e ".[dev]"
+   ```
 
-* Edit the `SYSTEM_PROMPT` constant at the top of `src/backend/app.py` to adjust Ballsy's personality or instructions.
+2. **Run in development mode**
+   ```bash
+   python run.py --reload
+   ```
 
-### Custom Integrations
+3. **Access API documentation**
+   Navigate to `http://localhost:8000/docs` for interactive API docs
 
-* Add new service integrations (e.g., additional URLs or actions) in the command processor's handler section.
+## 🚀 Deployment
 
----
+### Local Development
+```bash
+python run.py
+```
 
-## 🔧 Troubleshooting
+### Production (Render)
+```bash
+# Deploy to Render with automatic environment variable injection
+# The app will use the PORT environment variable set by Render
+```
 
-### Common Issues
+### Docker Deployment
+```dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY . .
+RUN pip install -e .
+EXPOSE 8000
+CMD ["python", "run.py"]
+```
 
-**🎙️ Microphone not working**
+## 🧪 Testing
 
-* Ensure the browser has microphone permissions.
-* Check that no other application is using the microphone.
-* Refresh the page if needed.
+### Manual Testing
+1. **Voice Recognition**: Test microphone input and speech recognition
+2. **Command Processing**: Verify all command types work correctly
+3. **UI Responsiveness**: Test on different screen sizes
+4. **Performance**: Monitor response times and resource usage
 
-**🤖 Voice recognition not accurate**
+### Automated Testing
+```bash
+# Run tests (when implemented)
+pytest tests/
 
-* Speak clearly at a moderate pace.
-* Reduce background noise.
-* Adjust the microphone sensitivity slider in settings.
+# Run linting
+flake8 src/
 
-**🔧 Backend server won't start**
+# Run type checking
+mypy src/
+```
 
-* Confirm all dependencies are installed: `pip install .`
-* Verify that port 8000 is free.
-* Inspect console logs for error messages.
+## 🔒 Security
 
-**🌐 Frontend not connecting**
+### API Security
+- **CORS Configuration**: Configured for cross-origin requests
+- **Input Validation**: Pydantic models for request validation
+- **Error Handling**: Graceful error responses without sensitive data
 
-* Ensure the backend server is running (`python run.py`).
-* Check the browser console (F12) for errors.
-* Make sure you're visiting [http://localhost:8000](http://localhost:8000).
-
-**🚪 Port 5000/5001 conflicts (macOS)**
-
-* If you previously used `--frontend-port 5001`, no longer needed—FastAPI now serves everything on 8000.
-* To use a different port locally, set `PORT` environment variable before running:
-
-  ```bash
-  export PORT=8080
-  python run.py
-  ```
-
-### 📋 System Requirements
-
-* **Python:** 3.8 or higher
-* **Browser:** Chrome 60+, Firefox 55+, Safari 14+, Edge 79+
-* **RAM:** Minimum 2GB available
-* **Storage:** 100MB free space
-* **Network:** Internet connection for AI features
-
----
+### Data Protection
+- **Environment Variables**: Sensitive data stored in environment variables
+- **Database Security**: SQLite with proper connection handling
+- **Session Management**: WebSocket connection management
 
 ## 🤝 Contributing
 
-We welcome contributions! To get started:
+### Development Workflow
+1. **Fork the repository**
+2. **Create a feature branch**
+3. **Make your changes**
+4. **Add tests if applicable**
+5. **Submit a pull request**
 
-1. **Fork** the repository.
-2. **Create** a feature branch:
+### Code Style
+- **Python**: Follow PEP 8 guidelines
+- **JavaScript**: Use ES6+ features and consistent formatting
+- **CSS**: Use BEM methodology for class naming
+- **Documentation**: Update README and docstrings as needed
 
-   ```bash
-   git checkout -b feature/amazing-feature
-   ```
-3. **Commit** your changes:
 
-   ```bash
-   git commit -m "Add amazing feature"
-   ```
-4. **Push** to your branch:
+## 🙏 Acknowledgments
 
-   ```bash
-   git push origin feature/amazing-feature
-   ```
-5. **Open** a Pull Request on GitHub.
+- **Mistral AI** for providing the language model capabilities
+- **Google Speech-to-Text** for speech recognition
+- **FastAPI** for the excellent web framework
+- **Open source community** for various libraries and tools
 
-### Development Setup
+## 📞 Support
 
-```bash
-# Clone your fork
-git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
+### Getting Help
+- **Documentation**: Check the `user_guide.md` for detailed usage instructions
+- **Issues**: Report bugs and feature requests through GitHub Issues
+- **Discussions**: Join community discussions for questions and ideas
 
-# Create virtual environment
-python3 -m venv ballsy-env
-source ballsy-env/bin/activate  # macOS/Linux
-# OR ballsy-env\Scripts\activate  # Windows
-
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-python test.py
-```
+### Common Issues
+1. **Microphone not working**: Check browser permissions and microphone access
+2. **API key errors**: Verify your Mistral API key is correctly set in `.env`
+3. **Slow responses**: Check internet connection and API service status
+4. **UI not loading**: Ensure all static files are properly served
 
 ---
 
-## ⭐️ Acknowledgments
+**Made with ❤️ by Pravar Chauhan(The real Ballsy!!)**
 
-* **🤖 Mistral AI** – For providing the AI language model
-* **🎙️ Google Speech API** – For speech recognition capabilities
-* **🎨 Font Awesome** – For beautiful icons
-* **🌐 FastAPI** – For the excellent web framework
-* **💻 Web Speech API** – For browser-based voice capabilities
-
----
-
-**⭐ If you like Ballsy, please give us a star on GitHub! ⭐**
-
-*Built with ❤️ and lots of ☕*
+*Ballsy - Your AI companion that talks like Ryan Reynolds and thinks like Robert Greene*
