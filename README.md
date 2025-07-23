@@ -44,7 +44,7 @@ A full-stack AI voice assistant with a Siri-like UI, powered by Mistral AI. Ball
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/ethicalzeus07/ballsy-voice-assistant
    cd Ballsy_1
    ```
 
