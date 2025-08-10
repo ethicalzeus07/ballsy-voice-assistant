@@ -5,7 +5,7 @@ Full‑stack AI voice assistant with a Siri‑like UI, powered by Mistral AI. Sp
 ![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)
 ![Mistral AI](https://img.shields.io/badge/Mistral%20AI-enabled-6f42c1)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=git)
 ![Made with Love](https://img.shields.io/badge/made%20with-❤️-ff69b4)
 
