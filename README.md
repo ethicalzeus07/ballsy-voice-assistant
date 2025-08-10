@@ -1,11 +1,11 @@
 ### 🎤 Ballsy Voice Assistant
 
-Full‑stack AI voice assistant with a Siri‑like UI, powered by Mistral AI. Speak or type, get smart answers, open sites, and more — with a slick animated interface.
+Full‑stack AI voice assistant with a Siri‑like UI, powered by Mistral AI — witty, confident, and psychologically grounded. Not just an assistant, Ballsy is a friend: playfully roasts you, listens, and gives honest, useful advice after real back‑and‑forth. Speak or type for concise, context‑aware answers and action‑ready commands (open sites, maps, media) in a slick animated interface.
 
 ![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)
 ![Mistral AI](https://img.shields.io/badge/Mistral%20AI-enabled-6f42c1)
-
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=git)
 ![Made with Love](https://img.shields.io/badge/made%20with-❤️-ff69b4)
 
@@ -17,6 +17,17 @@ Full‑stack AI voice assistant with a Siri‑like UI, powered by Mistral AI. Sp
 - **Math**: Inline calculations and chained operations (e.g., + 10)
 - **WebSocket + REST**: Real‑time updates and HTTP fallbacks
 - **Siri‑like UI**: Animated orb, typing indicator, dark mode
+
+### 🤘 Why Ballsy feels different
+
+- **Friend‑first persona**: More than a tool — Ballsy teases and motivates (light roasting), actually listens, and offers genuine, practical advice as the conversation unfolds.
+- **Crafted voice**: Witty, confident, and psychologically grounded (think Ryan Reynolds’ delivery with Robert Greene’s clarity). Replies feel human, helpful, and entertaining — not generic.
+- **Context‑aware by design**: Each request includes recent conversation turns, so Ballsy remembers the thread (within a server session) and stays in character.
+- **Concise on purpose**: Defaults to single‑sentence, high‑signal answers for speed and clarity; expands only when needed.
+- **Action‑first responses**: Recognized intents (YouTube, Spotify, Maps, news, etc.) return actions (`open_url`, `search`) so the UI can do things immediately, not just talk.
+- **Grounded honesty**: When uncertain, it deliberately falls back to helpful searches instead of guessing.
+
+Model: `mistral-large-latest`.
 
 ### 🚀 Quick start
 
