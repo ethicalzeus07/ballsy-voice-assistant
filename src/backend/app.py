@@ -174,19 +174,19 @@ app = FastAPI(
 )
 
 
-# Security: Configure CORS more restrictively
+# Security: Configure CORS - more permissive for production deployment
 app.add_middleware(
    CORSMiddleware,
-   allow_origins=["http://localhost:8000", "http://localhost:3000", "https://yourdomain.com"],  # Restrict origins
+   allow_origins=["*"],  # Allow all origins for production deployment
    allow_credentials=True,
    allow_methods=["GET", "POST", "PUT"],  # Restrict methods
    allow_headers=["*"],
 )
 
-# Security: Add trusted host middleware
+# Security: Add trusted host middleware - more permissive for production
 app.add_middleware(
    TrustedHostMiddleware,
-   allowed_hosts=["localhost", "127.0.0.1", "yourdomain.com"]  # Restrict allowed hosts
+   allowed_hosts=["*"]  # Allow all hosts for production deployment
 )
 
 
