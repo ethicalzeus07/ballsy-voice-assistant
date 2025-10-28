@@ -280,11 +280,8 @@ async function sendCommandFallback(command) {
 
     try {
         // Generate or get user ID for this session
-        const userId = localStorage.getItem('ballsy_user_id') || 
-                      (Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9));
-        if (!localStorage.getItem('ballsy_user_id')) {
-            localStorage.setItem('ballsy_user_id', userId);
-        }
+        // Backend expects numeric user_id; use a stable numeric ID for this client
+        const userId = 1;
         
         const response = await fetch(`${API_BASE_URL}/api/command`, {
             method: 'POST',

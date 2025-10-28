@@ -7,20 +7,8 @@
 const API_BASE_URL = 'http://localhost:8000';
 const WS_BASE_URL = 'ws://localhost:8000';
 
-// Generate a unique user ID for this browser session
-// This ensures each user gets their own conversation history and state
-function generateUserId() {
-    // Try to get existing user ID from localStorage
-    let userId = localStorage.getItem('ballsy_user_id');
-    if (!userId) {
-        // Generate a new unique ID using timestamp + random number
-        userId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('ballsy_user_id', userId);
-    }
-    return userId;
-}
-
-const DEFAULT_USER_ID = generateUserId();
+// Backend expects numeric user_id; use a stable numeric ID (1) for this client
+const DEFAULT_USER_ID = 1;
 
 // Application state
 const appState = {
