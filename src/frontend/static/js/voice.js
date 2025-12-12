@@ -363,8 +363,14 @@ async function sendCommandFallback(command) {
         // Display Ballsy’s response in the conversation UI
         addMessageToConversationFallback('assistant', data.response);
 
-        // Speak the response
-        speakText(data.response);
+        // Use Gemini TTS audio if provided, otherwise fall back to browser TTS
+        if (data.audio_base64) {
+            console.log('🎤 Using Gemini TTS audio');
+            playGeminiAudio(data.audio_base64);
+        } else {
+            console.log('🎤 Falling back to browser TTS (no audio_base64 in response)');
+            speakText(data.response);
+        }
 
         // Handle “open_url” action if provided
         if (data.action === 'open_url' && data.data?.url) {
