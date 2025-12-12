@@ -26,6 +26,7 @@ let speechSynthesis        = window.speechSynthesis;
 let isListening            = false;
 let isInitializing         = false;
 let isSpeaking             = false;
+let isProcessing           = false;  // Track if a request is in progress
 let speechTimeout          = null;
 // Remove global lastClickTime - this was causing conflicts between users
 // let lastClickTime          = 0;
@@ -110,6 +111,7 @@ function playGeminiAudio(audioBase64) {
         source.onended = () => {
             console.log('🔊 Finished playing Gemini audio');
             isSpeaking = false;
+            isProcessing = false;  // Clear processing flag
             updateUIStateFallback('idle');
         };
         
@@ -167,11 +169,13 @@ function speakText(text) {
     utterance.onend = () => {
         console.log('🔊 Finished speaking');
         isSpeaking = false;
+        isProcessing = false;  // Clear processing flag
         updateUIStateFallback('idle');
     };
     utterance.onerror = (event) => {
         console.error('🔊 Speech error:', event.error);
         isSpeaking = false;
+        isProcessing = false;  // Clear processing flag
         updateUIStateFallback('idle');
     };
 
@@ -341,7 +345,14 @@ function stopListening() {
 async function sendCommandFallback(command) {
     console.log('📤 Sending command to Ballsy:', command);
 
+    // Prevent concurrent requests - block if already processing
+    if (isProcessing) {
+        console.warn('⚠️ Request already in progress, ignoring duplicate command');
+        return;
+    }
+
     // Set processing state BEFORE sending
+    isProcessing = true;
     updateUIStateFallback('processing');
 
     try {

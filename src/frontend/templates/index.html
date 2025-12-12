@@ -164,6 +164,11 @@
       input.value = '';
 
       if (window.sendCommandFallback) {
+        // Check if already processing to prevent concurrent requests
+        if (window.isProcessing) {
+          console.warn('⚠️ Already processing a request, please wait...');
+          return;
+        }
         // sendCommandFallback will handle state updates
         sendCommandFallback(message);
       } else if (window.voiceFunctions && window.voiceFunctions.sendCommand) {
