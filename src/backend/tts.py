@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 # Read environment variables
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY", "")
-GEMINI_TTS_MODEL = os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-tts")
+# Try different TTS model names - some may not be available yet
+GEMINI_TTS_MODEL = os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")  # Try preview version
 GEMINI_TTS_VOICE = os.getenv("GEMINI_TTS_VOICE", "Kore")
 
 # Initialize Gemini client
@@ -52,23 +53,51 @@ def synthesize_pcm(text: str) -> bytes:
         raise ValueError("Empty text provided for TTS")
     
     try:
-        logger.debug(f"Synthesizing speech: '{text[:50]}...' with voice '{GEMINI_TTS_VOICE}' using model '{GEMINI_TTS_MODEL}'")
+        logger.info(f"Synthesizing speech: '{text[:50]}...' with voice '{GEMINI_TTS_VOICE}' using model '{GEMINI_TTS_MODEL}'")
         
-        # Generate audio using Gemini TTS with proper configuration
-        resp = client.models.generate_content(
-            model=GEMINI_TTS_MODEL,
-            contents=text,
-            config=types.GenerateContentConfig(
-                response_modalities=["AUDIO"],
-                speech_config=types.SpeechConfig(
-                    voice_config=types.VoiceConfig(
-                        prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                            voice_name=GEMINI_TTS_VOICE
-                        )
-                    )
-                ),
-            ),
-        )
+        # Try multiple TTS models in order of preference
+        tts_models = [
+            GEMINI_TTS_MODEL,
+            "gemini-2.5-flash-preview-tts",
+            "gemini-2.5-flash-tts",
+            "gemini-2.0-flash-exp",  # Fallback - might support TTS
+        ]
+        
+        last_error = None
+        for model_name in tts_models:
+            try:
+                logger.debug(f"Trying TTS model: {model_name}")
+                # Generate audio using Gemini TTS with proper configuration
+                resp = client.models.generate_content(
+                    model=model_name,
+                    contents=text,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["AUDIO"],
+                        speech_config=types.SpeechConfig(
+                            voice_config=types.VoiceConfig(
+                                prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                                    voice_name=GEMINI_TTS_VOICE
+                                )
+                            )
+                        ),
+                    ),
+                )
+                # If we get here, the model worked
+                break
+            except Exception as model_error:
+                error_str = str(model_error).lower()
+                if '404' in error_str or 'not found' in error_str or 'not supported' in error_str:
+                    logger.warning(f"Model {model_name} not found/supported, trying next...")
+                    last_error = model_error
+                    continue
+                # For other errors, raise immediately
+                raise
+        
+        # Check if we got a valid response
+        if 'resp' not in locals() or resp is None:
+            if last_error:
+                raise last_error
+            raise ValueError("No TTS models available")
         
         # Extract PCM data from response: first candidate, first part, inline_data.data
         if resp and hasattr(resp, 'candidates') and resp.candidates:
