@@ -56,17 +56,19 @@ def synthesize_pcm(text: str) -> bytes:
         logger.info(f"Synthesizing speech: '{text[:50]}...' with voice '{GEMINI_TTS_VOICE}' using model '{GEMINI_TTS_MODEL}'")
         
         # Try multiple TTS models in order of preference
+        # Note: TTS models may have different names or may not be available yet
         tts_models = [
             GEMINI_TTS_MODEL,
             "gemini-2.5-flash-preview-tts",
             "gemini-2.5-flash-tts",
-            "gemini-2.0-flash-exp",  # Fallback - might support TTS
+            "gemini-2.5-pro-preview-tts",
         ]
         
+        resp = None
         last_error = None
         for model_name in tts_models:
             try:
-                logger.debug(f"Trying TTS model: {model_name}")
+                logger.info(f"Trying TTS model: {model_name}")
                 # Generate audio using Gemini TTS with proper configuration
                 resp = client.models.generate_content(
                     model=model_name,
@@ -83,21 +85,23 @@ def synthesize_pcm(text: str) -> bytes:
                     ),
                 )
                 # If we get here, the model worked
+                logger.info(f"✅ Successfully used TTS model: {model_name}")
                 break
             except Exception as model_error:
                 error_str = str(model_error).lower()
                 if '404' in error_str or 'not found' in error_str or 'not supported' in error_str:
-                    logger.warning(f"Model {model_name} not found/supported, trying next...")
+                    logger.warning(f"Model {model_name} not found/supported: {str(model_error)[:100]}")
                     last_error = model_error
                     continue
                 # For other errors, raise immediately
+                logger.error(f"Non-404 error with model {model_name}: {model_error}")
                 raise
         
         # Check if we got a valid response
-        if 'resp' not in locals() or resp is None:
-            if last_error:
-                raise last_error
-            raise ValueError("No TTS models available")
+        if resp is None:
+            error_msg = f"No TTS models available. Last error: {str(last_error)[:200] if last_error else 'Unknown'}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         
         # Extract PCM data from response: first candidate, first part, inline_data.data
         if resp and hasattr(resp, 'candidates') and resp.candidates:
