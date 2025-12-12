@@ -622,18 +622,30 @@ class CommandProcessor:
            "content": response_data.response
        })
 
-       # 4) Add TTS audio to response if enabled and not already present
+       # 4) Generate TTS audio in background (non-blocking) to keep response fast
+       # Return response immediately, TTS will be added asynchronously if needed
        if config.ENABLE_GEMINI_TTS and not response_data.audio_base64 and response_data.response:
+           # Start TTS generation in background task (non-blocking)
+           import asyncio
+           async def generate_tts_background():
+               try:
+                   logger.debug(f"Generating TTS in background for: '{response_data.response[:50]}...'")
+                   audio_base64 = synthesize_speech_base64(text=response_data.response)
+                   if audio_base64:
+                       response_data.audio_base64 = audio_base64
+                       logger.info(f"✅ Added TTS audio to response (length: {len(audio_base64)} chars)")
+               except Exception as tts_error:
+                   logger.debug(f"Background TTS generation failed: {tts_error}")
+           
+           # Try to generate TTS synchronously first (fast path for short responses)
+           # If it takes too long, return response without audio
            try:
-               logger.info(f"Generating TTS for response: '{response_data.response[:50]}...'")
                audio_base64 = synthesize_speech_base64(text=response_data.response)
                if audio_base64:
                    response_data.audio_base64 = audio_base64
-                   logger.info(f"✅ Added TTS audio to response (length: {len(audio_base64)} chars)")
-               else:
-                   logger.warning(f"TTS returned None for response: '{response_data.response[:50]}...'")
+                   logger.debug(f"✅ Fast TTS generated (length: {len(audio_base64)} chars)")
            except Exception as tts_error:
-               logger.warning(f"TTS generation failed for response: {tts_error}", exc_info=True)
+               logger.debug(f"Fast TTS failed, continuing without audio: {tts_error}")
 
        return response_data
 

@@ -14,67 +14,99 @@ document.addEventListener('DOMContentLoaded', () => {
 function initUIListeners() {
     // Voice orb click
     const voiceOrb = document.querySelector('.voice-orb');
-    voiceOrb.addEventListener('click', handleVoiceOrbClick);
+    if (voiceOrb) {
+        voiceOrb.addEventListener('click', handleVoiceOrbClick);
+    }
     
     // Activate button
     const activateButton = document.getElementById('activate-button');
-    activateButton.addEventListener('click', handleActivateButtonClick);
+    if (activateButton) {
+        activateButton.addEventListener('click', handleActivateButtonClick);
+    }
     
     // Stop button
     const stopButton = document.getElementById('stop-button');
-    stopButton.addEventListener('click', handleStopButtonClick);
+    if (stopButton) {
+        stopButton.addEventListener('click', handleStopButtonClick);
+    }
     
     // Text input button
     const textInputButton = document.getElementById('text-input-button');
-    textInputButton.addEventListener('click', toggleTextInput);
+    if (textInputButton) {
+        textInputButton.addEventListener('click', toggleTextInput);
+    }
     
     // Send text button
     const sendTextButton = document.getElementById('send-text-button');
-    sendTextButton.addEventListener('click', handleSendTextButtonClick);
+    if (sendTextButton) {
+        sendTextButton.addEventListener('click', handleSendTextButtonClick);
+    }
     
     // Text command input (for Enter key)
     const textCommandInput = document.getElementById('text-command');
-    textCommandInput.addEventListener('keydown', handleTextCommandKeydown);
+    if (textCommandInput) {
+        textCommandInput.addEventListener('keydown', handleTextCommandKeydown);
+    }
     
     // Settings button
     const settingsButton = document.querySelector('.settings-button');
-    settingsButton.addEventListener('click', openSettings);
+    if (settingsButton) {
+        settingsButton.addEventListener('click', openSettings);
+    }
     
     // Close settings button
     const closeSettingsButton = document.getElementById('close-settings');
-    closeSettingsButton.addEventListener('click', closeSettings);
+    if (closeSettingsButton) {
+        closeSettingsButton.addEventListener('click', closeSettings);
+    }
     
     // Save settings button
     const saveSettingsButton = document.getElementById('save-settings');
-    saveSettingsButton.addEventListener('click', handleSaveSettingsClick);
+    if (saveSettingsButton) {
+        saveSettingsButton.addEventListener('click', handleSaveSettingsClick);
+    }
     
     // Reset settings button
     const resetSettingsButton = document.getElementById('reset-settings');
-    resetSettingsButton.addEventListener('click', handleResetSettingsClick);
+    if (resetSettingsButton) {
+        resetSettingsButton.addEventListener('click', handleResetSettingsClick);
+    }
     
     // Voice speed slider
     const voiceSpeedSlider = document.getElementById('voice-speed');
-    voiceSpeedSlider.addEventListener('input', handleVoiceSpeedChange);
+    if (voiceSpeedSlider) {
+        voiceSpeedSlider.addEventListener('input', handleVoiceSpeedChange);
+    }
     
     // Sensitivity slider
     const sensitivitySlider = document.getElementById('sensitivity-slider');
-    sensitivitySlider.addEventListener('input', handleSensitivityChange);
+    if (sensitivitySlider) {
+        sensitivitySlider.addEventListener('input', handleSensitivityChange);
+    }
     
     // Theme select
     const themeSelect = document.getElementById('theme-select');
-    themeSelect.addEventListener('change', handleThemeChange);
+    if (themeSelect) {
+        themeSelect.addEventListener('change', handleThemeChange);
+    }
     
     // Color select
     const colorSelect = document.getElementById('color-select');
-    colorSelect.addEventListener('change', handleColorChange);
+    if (colorSelect) {
+        colorSelect.addEventListener('change', handleColorChange);
+    }
     
     // Voice select
     const voiceSelect = document.getElementById('voice-select');
-    voiceSelect.addEventListener('change', handleVoiceChange);
+    if (voiceSelect) {
+        voiceSelect.addEventListener('change', handleVoiceChange);
+    }
     
     // Auto-listen checkbox
     const autoListenCheckbox = document.getElementById('auto-listen');
-    autoListenCheckbox.addEventListener('change', handleAutoListenChange);
+    if (autoListenCheckbox) {
+        autoListenCheckbox.addEventListener('change', handleAutoListenChange);
+    }
     
     // System theme change detection
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
@@ -121,10 +153,13 @@ function handleStopButtonClick() {
  */
 function toggleTextInput() {
     const textInputContainer = document.getElementById('text-input-container');
-    textInputContainer.classList.toggle('hidden');
-    
-    if (!textInputContainer.classList.contains('hidden')) {
-        document.getElementById('text-command').focus();
+    if (textInputContainer) {
+        textInputContainer.classList.toggle('hidden');
+        
+        if (!textInputContainer.classList.contains('hidden')) {
+            const textCommand = document.getElementById('text-command');
+            if (textCommand) textCommand.focus();
+        }
     }
 }
 
@@ -133,14 +168,19 @@ function toggleTextInput() {
  */
 function handleSendTextButtonClick() {
     const textCommandInput = document.getElementById('text-command');
+    if (!textCommandInput) return;
+    
     const command = textCommandInput.value.trim();
     
-    if (command) {
+    if (command && window.appFunctions && window.appFunctions.sendCommand) {
         window.appFunctions.sendCommand(command);
         textCommandInput.value = '';
         
         // Hide text input after sending
-        document.getElementById('text-input-container').classList.add('hidden');
+        const textInputContainer = document.getElementById('text-input-container');
+        if (textInputContainer) {
+            textInputContainer.classList.add('hidden');
+        }
     }
 }
 
@@ -158,14 +198,20 @@ function handleTextCommandKeydown(event) {
  * Open settings panel
  */
 function openSettings() {
-    document.getElementById('settings-panel').classList.remove('hidden');
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsPanel) {
+        settingsPanel.classList.remove('hidden');
+    }
 }
 
 /**
  * Close settings panel
  */
 function closeSettings() {
-    document.getElementById('settings-panel').classList.add('hidden');
+    const settingsPanel = document.getElementById('settings-panel');
+    if (settingsPanel) {
+        settingsPanel.classList.add('hidden');
+    }
 }
 
 /**
@@ -190,15 +236,30 @@ function handleResetSettingsClick() {
         autoListen: true
     };
     
-    // Update UI
-    document.getElementById('voice-select').value = 'Daniel';
-    document.getElementById('voice-speed').value = 180;
-    document.getElementById('voice-speed-value').textContent = 180;
-    document.getElementById('theme-select').value = 'light';
-    document.getElementById('color-select').value = 'blue';
-    document.getElementById('sensitivity-slider').value = 5;
-    document.getElementById('sensitivity-value').textContent = 5;
-    document.getElementById('auto-listen').checked = true;
+    // Update UI (with null checks)
+    const voiceSelect = document.getElementById('voice-select');
+    if (voiceSelect) voiceSelect.value = 'Daniel';
+    
+    const voiceSpeed = document.getElementById('voice-speed');
+    if (voiceSpeed) voiceSpeed.value = 180;
+    
+    const voiceSpeedValue = document.getElementById('voice-speed-value');
+    if (voiceSpeedValue) voiceSpeedValue.textContent = 180;
+    
+    const themeSelect = document.getElementById('theme-select');
+    if (themeSelect) themeSelect.value = 'light';
+    
+    const colorSelect = document.getElementById('color-select');
+    if (colorSelect) colorSelect.value = 'blue';
+    
+    const sensitivitySlider = document.getElementById('sensitivity-slider');
+    if (sensitivitySlider) sensitivitySlider.value = 5;
+    
+    const sensitivityValue = document.getElementById('sensitivity-value');
+    if (sensitivityValue) sensitivityValue.textContent = 5;
+    
+    const autoListen = document.getElementById('auto-listen');
+    if (autoListen) autoListen.checked = true;
     
     // Apply settings
     applyTheme();
@@ -211,18 +272,32 @@ function handleResetSettingsClick() {
  * Handle voice speed slider change
  */
 function handleVoiceSpeedChange() {
-    const value = document.getElementById('voice-speed').value;
-    document.getElementById('voice-speed-value').textContent = value;
-    window.appState.settings.voiceSpeed = parseInt(value);
+    const voiceSpeed = document.getElementById('voice-speed');
+    if (!voiceSpeed) return;
+    
+    const value = voiceSpeed.value;
+    const voiceSpeedValue = document.getElementById('voice-speed-value');
+    if (voiceSpeedValue) voiceSpeedValue.textContent = value;
+    
+    if (window.appState) {
+        window.appState.settings.voiceSpeed = parseInt(value);
+    }
 }
 
 /**
  * Handle sensitivity slider change
  */
 function handleSensitivityChange() {
-    const value = document.getElementById('sensitivity-slider').value;
-    document.getElementById('sensitivity-value').textContent = value;
-    window.appState.settings.sensitivity = parseInt(value);
+    const sensitivitySlider = document.getElementById('sensitivity-slider');
+    if (!sensitivitySlider) return;
+    
+    const value = sensitivitySlider.value;
+    const sensitivityValue = document.getElementById('sensitivity-value');
+    if (sensitivityValue) sensitivityValue.textContent = value;
+    
+    if (window.appState) {
+        window.appState.settings.sensitivity = parseInt(value);
+    }
     
     // Update silence threshold based on sensitivity
     // Higher sensitivity = lower threshold
@@ -233,7 +308,10 @@ function handleSensitivityChange() {
  * Handle theme select change
  */
 function handleThemeChange() {
-    const value = document.getElementById('theme-select').value;
+    const themeSelect = document.getElementById('theme-select');
+    if (!themeSelect || !window.appState) return;
+    
+    const value = themeSelect.value;
     window.appState.settings.theme = value;
     applyTheme();
 }
@@ -242,7 +320,10 @@ function handleThemeChange() {
  * Handle color select change
  */
 function handleColorChange() {
-    const value = document.getElementById('color-select').value;
+    const colorSelect = document.getElementById('color-select');
+    if (!colorSelect || !window.appState) return;
+    
+    const value = colorSelect.value;
     window.appState.settings.accentColor = value;
     applyTheme();
 }
@@ -251,7 +332,10 @@ function handleColorChange() {
  * Handle voice select change
  */
 function handleVoiceChange() {
-    const value = document.getElementById('voice-select').value;
+    const voiceSelect = document.getElementById('voice-select');
+    if (!voiceSelect || !window.appState) return;
+    
+    const value = voiceSelect.value;
     window.appState.settings.voice = value;
 }
 
@@ -259,7 +343,10 @@ function handleVoiceChange() {
  * Handle auto-listen checkbox change
  */
 function handleAutoListenChange() {
-    const checked = document.getElementById('auto-listen').checked;
+    const autoListen = document.getElementById('auto-listen');
+    if (!autoListen || !window.appState) return;
+    
+    const checked = autoListen.checked;
     window.appState.settings.autoListen = checked;
 }
 
@@ -276,6 +363,8 @@ function populateVoiceOptions() {
     const populateVoiceList = () => {
         const voices = window.speechSynthesis.getVoices();
         const voiceSelect = document.getElementById('voice-select');
+        
+        if (!voiceSelect) return;
         
         // Clear existing options
         voiceSelect.innerHTML = '';

@@ -365,11 +365,18 @@ async function loadSettings() {
         appState.settings.voiceSpeed = data.settings.voice_speed || 180;
         appState.settings.theme = data.settings.theme || 'light';
         
-        // Update UI
-        document.getElementById('voice-select').value = appState.settings.voice;
-        document.getElementById('voice-speed').value = appState.settings.voiceSpeed;
-        document.getElementById('voice-speed-value').textContent = appState.settings.voiceSpeed;
-        document.getElementById('theme-select').value = appState.settings.theme;
+        // Update UI (with null checks)
+        const voiceSelect = document.getElementById('voice-select');
+        if (voiceSelect) voiceSelect.value = appState.settings.voice;
+        
+        const voiceSpeed = document.getElementById('voice-speed');
+        if (voiceSpeed) voiceSpeed.value = appState.settings.voiceSpeed;
+        
+        const voiceSpeedValue = document.getElementById('voice-speed-value');
+        if (voiceSpeedValue) voiceSpeedValue.textContent = appState.settings.voiceSpeed;
+        
+        const themeSelect = document.getElementById('theme-select');
+        if (themeSelect) themeSelect.value = appState.settings.theme;
     } catch (error) {
         console.error('Error loading settings:', error);
         // Continue with default settings
@@ -437,39 +444,45 @@ function updateUIState(state) {
     
     // Update voice orb
     const voiceOrb = document.querySelector('.voice-orb');
-    voiceOrb.classList.remove('idle', 'listening', 'processing', 'speaking', 'error');
-    voiceOrb.classList.add(state);
+    if (voiceOrb) {
+        voiceOrb.classList.remove('idle', 'listening', 'processing', 'speaking', 'error');
+        voiceOrb.classList.add(state);
+    }
     
     // Update status text
     const statusText = document.getElementById('status-text');
-    switch (state) {
-        case 'idle':
-            statusText.textContent = 'Click to activate';
-            break;
-        case 'listening':
-            statusText.textContent = 'Listening...';
-            break;
-        case 'processing':
-            statusText.textContent = 'Processing...';
-            break;
-        case 'speaking':
-            statusText.textContent = 'Speaking...';
-            break;
-        case 'error':
-            statusText.textContent = 'Error occurred';
-            break;
+    if (statusText) {
+        switch (state) {
+            case 'idle':
+                statusText.textContent = 'Click to activate';
+                break;
+            case 'listening':
+                statusText.textContent = 'Listening...';
+                break;
+            case 'processing':
+                statusText.textContent = 'Processing...';
+                break;
+            case 'speaking':
+                statusText.textContent = 'Speaking...';
+                break;
+            case 'error':
+                statusText.textContent = 'Error occurred';
+                break;
+        }
     }
     
-    // Update buttons
+    // Update buttons (only if they exist)
     const activateButton = document.getElementById('activate-button');
     const stopButton = document.getElementById('stop-button');
     
-    if (state === 'listening' || state === 'processing') {
-        activateButton.classList.add('hidden');
-        stopButton.classList.remove('hidden');
-    } else {
-        activateButton.classList.remove('hidden');
-        stopButton.classList.add('hidden');
+    if (activateButton && stopButton) {
+        if (state === 'listening' || state === 'processing') {
+            activateButton.classList.add('hidden');
+            stopButton.classList.remove('hidden');
+        } else {
+            activateButton.classList.remove('hidden');
+            stopButton.classList.add('hidden');
+        }
     }
 }
 
