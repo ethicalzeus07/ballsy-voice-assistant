@@ -73,55 +73,45 @@ function initTextToSpeech() {
  */
 function playGeminiAudio(audioBase64) {
     try {
-        // Decode base64 audio
+        // Decode base64 audio (now MP3/OGG from Cloud TTS, not PCM)
+        // Create a blob URL and play it directly - much simpler!
         const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
+        const blob = new Blob([audioBytes], { type: 'audio/mpeg' }); // Assume MP3 from Cloud TTS
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
         
-        // Create AudioContext for PCM playback
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Gemini TTS returns PCM at 24kHz, 16-bit, mono
-        const sampleRate = 24000;
-        const channels = 1;
-        const bitsPerSample = 16;
-        
-        // Convert PCM bytes to Float32Array
-        const samples = new Float32Array(audioBytes.length / 2);
-        for (let i = 0; i < samples.length; i++) {
-            // Read 16-bit signed integer (little-endian)
-            const int16 = (audioBytes[i * 2 + 1] << 8) | audioBytes[i * 2];
-            // Convert to signed (-32768 to 32767)
-            const signed = int16 > 32767 ? int16 - 65536 : int16;
-            // Normalize to -1.0 to 1.0
-            samples[i] = signed / 32768.0;
-        }
-        
-        // Create audio buffer
-        const audioBuffer = audioContext.createBuffer(channels, samples.length, sampleRate);
-        audioBuffer.getChannelData(0).set(samples);
-        
-        // Create source and play
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        
-        // Update UI state
         isSpeaking = true;
+        isProcessing = true;  // Keep processing flag until audio finishes
         updateUIStateFallback('speaking');
         
-        source.onended = () => {
-            console.log('🔊 Finished playing Gemini audio');
+        audio.onended = () => {
+            console.log('🔊 Finished playing Cloud TTS audio');
+            URL.revokeObjectURL(url);
             isSpeaking = false;
-            isProcessing = false;  // Clear processing flag
+            isProcessing = false;
             updateUIStateFallback('idle');
         };
         
-        source.start(0);
-        console.log('🔊 Started playing Gemini TTS audio');
+        audio.onerror = (err) => {
+            console.error('❌ Error playing Cloud TTS audio:', err);
+            URL.revokeObjectURL(url);
+            isSpeaking = false;
+            isProcessing = false;
+            updateUIStateFallback('idle');
+            // Fallback to browser TTS
+            const lastMessage = document.querySelector('.assistant-message:last-child');
+            if (lastMessage && lastMessage.textContent) {
+                speakText(lastMessage.textContent);
+            }
+        };
+        
+        audio.play();
+        console.log('🔊 Started playing Cloud TTS audio (MP3)');
         
     } catch (error) {
-        console.error('❌ Error playing Gemini audio, falling back to browser TTS:', error);
+        console.error('❌ Error playing Cloud TTS audio, falling back to browser TTS:', error);
+        isProcessing = false;
         // Fallback to browser TTS if audio playback fails
-        // Try to get the response text from the last message or data
         const lastMessage = document.querySelector('.assistant-message:last-child');
         if (lastMessage && lastMessage.textContent) {
             speakText(lastMessage.textContent);

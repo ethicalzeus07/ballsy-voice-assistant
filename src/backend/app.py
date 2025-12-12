@@ -911,8 +911,16 @@ async def debug_tts():
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Google Cloud Text-to-Speech API Endpoint
+class TTSRequest(BaseModel):
+    text: str
+    language_code: Optional[str] = "en-US"
+    voice_name: Optional[str] = "en-US-Neural2-A"
+    speaking_rate: Optional[float] = 1.0
+    pitch: Optional[float] = 0.0
+    format: Optional[str] = "mp3"  # "mp3" or "ogg"
+
 @app.post("/api/tts")
-async def tts_endpoint(body: dict):
+async def tts_endpoint(body: TTSRequest):
    """
    Synthesize text to speech using Google Cloud Text-to-Speech API.
    Returns MP3 or OGG audio bytes.
@@ -920,17 +928,10 @@ async def tts_endpoint(body: dict):
    from src.backend.tts_google import synthesize_tts
    from google.cloud import texttospeech
    
-   # Extract parameters
-   text = body.get("text", "").strip()
-   if not text:
+   if not body.text or not body.text.strip():
        raise HTTPException(status_code=400, detail="Text is required")
    
-   language_code = body.get("language_code", "en-US")
-   voice_name = body.get("voice_name", "en-US-Neural2-A")
-   speaking_rate = float(body.get("speaking_rate", 1.0))
-   pitch = float(body.get("pitch", 0.0))
-   fmt = body.get("format", "mp3")
-   
+   fmt = body.format or "mp3"
    if fmt not in ("mp3", "ogg"):
        raise HTTPException(status_code=400, detail="Unsupported format. Use 'mp3' or 'ogg'")
    
@@ -943,11 +944,11 @@ async def tts_endpoint(body: dict):
    
    try:
        audio_bytes = synthesize_tts(
-           text=text,
-           language_code=language_code,
-           voice_name=voice_name,
-           speaking_rate=speaking_rate,
-           pitch=pitch,
+           text=body.text,
+           language_code=body.language_code or "en-US",
+           voice_name=body.voice_name or "en-US-Neural2-A",
+           speaking_rate=body.speaking_rate or 1.0,
+           pitch=body.pitch or 0.0,
            audio_encoding=encoding,
        )
        
