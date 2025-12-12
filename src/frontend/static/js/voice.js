@@ -222,7 +222,7 @@ function initSpeechRecognition() {
 
         // Send the entire phrase as a command immediately
         addMessageToConversationFallback('user', transcript);
-        updateUIStateFallback('processing');
+        // sendCommandFallback will set processing state itself
         sendCommandFallback(transcript);
     };
 
