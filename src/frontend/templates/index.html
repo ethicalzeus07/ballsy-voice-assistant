@@ -154,6 +154,8 @@
 
     function sendMessage() {
       const input = document.getElementById('text-command');
+      if (!input) return;
+      
       const message = input.value.trim();
       if (!message) return;
 
@@ -161,9 +163,14 @@
       addMessage('user', message);
       input.value = '';
 
-      if (window.voiceFunctions && window.sendCommandFallback) {
-        updateUIState('processing');
+      if (window.sendCommandFallback) {
+        // sendCommandFallback will handle state updates
         sendCommandFallback(message);
+      } else if (window.voiceFunctions && window.voiceFunctions.sendCommand) {
+        if (window.appFunctions && window.appFunctions.updateUIState) {
+          window.appFunctions.updateUIState('processing');
+        }
+        window.voiceFunctions.sendCommand(message);
       } else {
         // Fallback typing simulation
         setTimeout(() => {
@@ -171,6 +178,9 @@
           setTimeout(() => {
             removeTypingIndicator();
             addMessage('assistant', getBallsyResponse(message));
+            if (window.appFunctions && window.appFunctions.updateUIState) {
+              window.appFunctions.updateUIState('idle');
+            }
           }, 1500);
         }, 500);
       }
