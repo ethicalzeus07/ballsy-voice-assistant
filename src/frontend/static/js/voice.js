@@ -368,14 +368,32 @@ async function sendCommandFallback(command) {
         addMessageToConversationFallback('assistant', data.response);
 
         // Use Gemini TTS audio if provided, otherwise fall back to browser TTS
-        if (data.audio_base64 && data.audio_base64.length > 10) {
+        console.log('🔍 Checking audio_base64:', {
+            has_audio: !!data.audio_base64,
+            audio_length: data.audio_base64 ? data.audio_base64.length : 0,
+            has_playGeminiAudio: typeof window.playGeminiAudio === 'function'
+        });
+        
+        if (data.audio_base64 && data.audio_base64.length > 10 && typeof window.playGeminiAudio === 'function') {
             console.log('🎤 Using Gemini TTS audio (length:', data.audio_base64.length, 'chars)');
             // Store response text for fallback if audio playback fails
             if (!window.appState) window.appState = {};
             window.appState.lastResponse = data.response;
-            playGeminiAudio(data.audio_base64);
+            try {
+                playGeminiAudio(data.audio_base64);
+            } catch (err) {
+                console.error('❌ Error calling playGeminiAudio:', err);
+                speakText(data.response);
+            }
         } else {
-            console.log('🎤 Falling back to browser TTS (no audio_base64 in response or too short)');
+            if (!data.audio_base64) {
+                console.log('⚠️ No audio_base64 in response');
+            } else if (data.audio_base64.length <= 10) {
+                console.log('⚠️ audio_base64 too short:', data.audio_base64.length);
+            } else if (typeof window.playGeminiAudio !== 'function') {
+                console.log('⚠️ playGeminiAudio function not available');
+            }
+            console.log('🎤 Falling back to browser TTS');
             speakText(data.response);
         }
 
