@@ -776,15 +776,13 @@ class CommandProcessor:
            audio_base64 = None
            if config.ENABLE_GEMINI_TTS:
                try:
-                   audio_base64 = synthesize_speech_base64(
-                       text=final_reply,
-                       voice_name=config.GEMINI_TTS_VOICE,
-                       model=config.GEMINI_TTS_MODEL
-                   )
+                   audio_base64 = synthesize_speech_base64(text=final_reply)
                    if audio_base64:
-                       logger.debug(f"Generated TTS audio for response (length: {len(audio_base64)} chars)")
+                       logger.info(f"✅ Generated TTS audio for response (length: {len(audio_base64)} chars)")
+                   else:
+                       logger.warning("TTS returned None, falling back to browser TTS")
                except Exception as tts_error:
-                   logger.warning(f"TTS generation failed, falling back to browser TTS: {tts_error}")
+                   logger.warning(f"TTS generation failed, falling back to browser TTS: {tts_error}", exc_info=True)
            
            return CommandResponse(
                response=final_reply,
@@ -838,6 +836,22 @@ async def readiness_check():
        return JSONResponse(
            status_code=503,
            content={"status": "not ready", "db": "unavailable"}
+       )
+
+
+@app.get("/debug/tts")
+async def debug_tts():
+   """Debug endpoint to test TTS functionality."""
+   from src.backend.tts import synthesize_pcm
+   
+   try:
+       _ = synthesize_pcm("This is a human-like Gemini voice test.")
+       return JSONResponse(content={"ok": True, "message": "TTS synthesis successful"})
+   except Exception as e:
+       logger.error(f"TTS debug error: {e}", exc_info=True)
+       return JSONResponse(
+           status_code=500,
+           content={"ok": False, "error": str(e)}
        )
 
 
