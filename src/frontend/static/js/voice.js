@@ -559,6 +559,7 @@ window.startListening = startListening;
 window.stopListening  = stopListening;
 window.speakText      = speakText;
 window.playGeminiAudio = playGeminiAudio;
+window.isProcessing = false;  // Expose for checking in sendMessage
 
 
 // ──────────────────────────────────────────────────────────────────────────────
