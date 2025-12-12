@@ -625,12 +625,15 @@ class CommandProcessor:
        # 4) Add TTS audio to response if enabled and not already present
        if config.ENABLE_GEMINI_TTS and not response_data.audio_base64 and response_data.response:
            try:
+               logger.info(f"Generating TTS for response: '{response_data.response[:50]}...'")
                audio_base64 = synthesize_speech_base64(text=response_data.response)
                if audio_base64:
                    response_data.audio_base64 = audio_base64
                    logger.info(f"✅ Added TTS audio to response (length: {len(audio_base64)} chars)")
+               else:
+                   logger.warning(f"TTS returned None for response: '{response_data.response[:50]}...'")
            except Exception as tts_error:
-               logger.debug(f"TTS generation failed for response: {tts_error}")
+               logger.warning(f"TTS generation failed for response: {tts_error}", exc_info=True)
 
        return response_data
 
