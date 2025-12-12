@@ -119,7 +119,11 @@ function playGeminiAudio(audioBase64) {
     } catch (error) {
         console.error('❌ Error playing Gemini audio, falling back to browser TTS:', error);
         // Fallback to browser TTS if audio playback fails
-        if (window.appState && window.appState.lastResponse) {
+        // Try to get the response text from the last message or data
+        const lastMessage = document.querySelector('.assistant-message:last-child');
+        if (lastMessage && lastMessage.textContent) {
+            speakText(lastMessage.textContent);
+        } else if (window.appState && window.appState.lastResponse) {
             speakText(window.appState.lastResponse);
         }
     }
@@ -364,11 +368,14 @@ async function sendCommandFallback(command) {
         addMessageToConversationFallback('assistant', data.response);
 
         // Use Gemini TTS audio if provided, otherwise fall back to browser TTS
-        if (data.audio_base64) {
-            console.log('🎤 Using Gemini TTS audio');
+        if (data.audio_base64 && data.audio_base64.length > 10) {
+            console.log('🎤 Using Gemini TTS audio (length:', data.audio_base64.length, 'chars)');
+            // Store response text for fallback if audio playback fails
+            if (!window.appState) window.appState = {};
+            window.appState.lastResponse = data.response;
             playGeminiAudio(data.audio_base64);
         } else {
-            console.log('🎤 Falling back to browser TTS (no audio_base64 in response)');
+            console.log('🎤 Falling back to browser TTS (no audio_base64 in response or too short)');
             speakText(data.response);
         }
 
