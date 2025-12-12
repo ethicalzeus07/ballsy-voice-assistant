@@ -24,7 +24,7 @@ from contextlib import asynccontextmanager
 
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, File, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -37,6 +37,7 @@ from src.backend.config import config
 from src.backend.database import init_database, get_db_session, clear_conversation_history, CommandHistory, Setting, User
 from src.backend.ai import generate_reply
 from src.backend.tts import synthesize_speech_base64
+from src.backend.tts_google import synthesize_tts_base64
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -622,17 +623,41 @@ class CommandProcessor:
            "content": response_data.response
        })
 
-       # 4) Generate TTS audio synchronously but with timeout to keep response fast
-       # For ~1s response time, we generate TTS inline but it should be fast
-       if config.ENABLE_GEMINI_TTS and not response_data.audio_base64 and response_data.response:
+       # 4) Generate TTS audio - prefer Cloud TTS, fallback to Gemini TTS
+       if not response_data.audio_base64 and response_data.response:
            try:
                logger.debug(f"Generating TTS for: '{response_data.response[:50]}...'")
-               audio_base64 = synthesize_speech_base64(text=response_data.response)
-               if audio_base64:
-                   response_data.audio_base64 = audio_base64
-                   logger.info(f"✅ Generated TTS audio (length: {len(audio_base64)} chars)")
-               else:
-                   logger.warning(f"TTS returned None for: '{response_data.response[:50]}...'")
+               
+               # Prefer Google Cloud TTS (better quality, free tier)
+               if config.USE_CLOUD_TTS:
+                   try:
+                       audio_base64 = synthesize_tts_base64(
+                           text=response_data.response,
+                           language_code=config.CLOUD_TTS_LANGUAGE,
+                           voice_name=config.CLOUD_TTS_VOICE,
+                           speaking_rate=config.CLOUD_TTS_SPEAKING_RATE,
+                           pitch=config.CLOUD_TTS_PITCH,
+                       )
+                       if audio_base64:
+                           response_data.audio_base64 = audio_base64
+                           logger.info(f"✅ Generated Cloud TTS audio (length: {len(audio_base64)} chars)")
+                       else:
+                           logger.warning("Cloud TTS returned None, trying Gemini TTS fallback")
+                           raise ValueError("Cloud TTS returned None")
+                   except Exception as cloud_tts_error:
+                       logger.warning(f"Cloud TTS failed: {cloud_tts_error}, trying Gemini TTS fallback")
+                       # Fall through to Gemini TTS
+               
+               # Fallback to Gemini TTS if Cloud TTS is disabled or failed
+               if not response_data.audio_base64 and config.ENABLE_GEMINI_TTS:
+                   try:
+                       audio_base64 = synthesize_speech_base64(text=response_data.response)
+                       if audio_base64:
+                           response_data.audio_base64 = audio_base64
+                           logger.info(f"✅ Generated Gemini TTS audio (length: {len(audio_base64)} chars)")
+                   except Exception as gemini_tts_error:
+                       logger.warning(f"Gemini TTS also failed: {gemini_tts_error}")
+               
            except Exception as tts_error:
                logger.warning(f"TTS generation failed: {tts_error}")
                # Continue without audio - response is still valid
@@ -786,17 +811,32 @@ class CommandProcessor:
            sentences = re.split(r'(?<=[.!?])\s+', raw_reply)
            final_reply = sentences[0] if len(sentences) > 1 else raw_reply
            
-           # Generate TTS audio if enabled
+           # Generate TTS audio - prefer Cloud TTS, fallback to Gemini TTS
            audio_base64 = None
-           if config.ENABLE_GEMINI_TTS:
+           if config.USE_CLOUD_TTS:
+               try:
+                   audio_base64 = synthesize_tts_base64(
+                       text=final_reply,
+                       language_code=config.CLOUD_TTS_LANGUAGE,
+                       voice_name=config.CLOUD_TTS_VOICE,
+                       speaking_rate=config.CLOUD_TTS_SPEAKING_RATE,
+                       pitch=config.CLOUD_TTS_PITCH,
+                   )
+                   if audio_base64:
+                       logger.info(f"✅ Generated Cloud TTS audio (length: {len(audio_base64)} chars)")
+               except Exception as cloud_tts_error:
+                   logger.warning(f"Cloud TTS failed: {cloud_tts_error}")
+           
+           # Fallback to Gemini TTS if Cloud TTS failed or is disabled
+           if not audio_base64 and config.ENABLE_GEMINI_TTS:
                try:
                    audio_base64 = synthesize_speech_base64(text=final_reply)
                    if audio_base64:
-                       logger.info(f"✅ Generated TTS audio for response (length: {len(audio_base64)} chars)")
+                       logger.info(f"✅ Generated Gemini TTS audio (length: {len(audio_base64)} chars)")
                    else:
-                       logger.warning("TTS returned None, falling back to browser TTS")
+                       logger.warning("Gemini TTS returned None, falling back to browser TTS")
                except Exception as tts_error:
-                   logger.warning(f"TTS generation failed, falling back to browser TTS: {tts_error}", exc_info=True)
+                   logger.warning(f"Gemini TTS generation failed, falling back to browser TTS: {tts_error}", exc_info=True)
            
            return CommandResponse(
                response=final_reply,
@@ -867,6 +907,56 @@ async def debug_tts():
            status_code=500,
            content={"ok": False, "error": str(e)}
        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Google Cloud Text-to-Speech API Endpoint
+@app.post("/api/tts")
+async def tts_endpoint(body: dict):
+   """
+   Synthesize text to speech using Google Cloud Text-to-Speech API.
+   Returns MP3 or OGG audio bytes.
+   """
+   from src.backend.tts_google import synthesize_tts
+   from google.cloud import texttospeech
+   
+   # Extract parameters
+   text = body.get("text", "").strip()
+   if not text:
+       raise HTTPException(status_code=400, detail="Text is required")
+   
+   language_code = body.get("language_code", "en-US")
+   voice_name = body.get("voice_name", "en-US-Neural2-A")
+   speaking_rate = float(body.get("speaking_rate", 1.0))
+   pitch = float(body.get("pitch", 0.0))
+   fmt = body.get("format", "mp3")
+   
+   if fmt not in ("mp3", "ogg"):
+       raise HTTPException(status_code=400, detail="Unsupported format. Use 'mp3' or 'ogg'")
+   
+   # Map format to encoding
+   encoding = (
+       texttospeech.AudioEncoding.MP3
+       if fmt == "mp3"
+       else texttospeech.AudioEncoding.OGG_OPUS
+   )
+   
+   try:
+       audio_bytes = synthesize_tts(
+           text=text,
+           language_code=language_code,
+           voice_name=voice_name,
+           speaking_rate=speaking_rate,
+           pitch=pitch,
+           audio_encoding=encoding,
+       )
+       
+       media_type = "audio/mpeg" if fmt == "mp3" else "audio/ogg"
+       return Response(content=audio_bytes, media_type=media_type)
+       
+   except Exception as e:
+       logger.exception("TTS synthesis failed")
+       raise HTTPException(status_code=500, detail=f"TTS failed: {str(e)}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────

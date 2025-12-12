@@ -28,10 +28,18 @@ class Config:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
     
-    # TTS Configuration (uses dedicated TTS models)
+    # TTS Configuration
+    # Option 1: Gemini TTS (uses dedicated TTS models)
     GEMINI_TTS_MODEL: str = os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-tts")
     GEMINI_TTS_VOICE: str = os.getenv("GEMINI_TTS_VOICE", "Kore")
-    ENABLE_GEMINI_TTS: bool = os.getenv("ENABLE_GEMINI_TTS", "true").lower() == "true"
+    ENABLE_GEMINI_TTS: bool = os.getenv("ENABLE_GEMINI_TTS", "false").lower() == "true"
+    
+    # Option 2: Google Cloud Text-to-Speech (WaveNet/Neural2 voices - recommended)
+    USE_CLOUD_TTS: bool = os.getenv("USE_CLOUD_TTS", "true").lower() == "true"
+    CLOUD_TTS_VOICE: str = os.getenv("CLOUD_TTS_VOICE", "en-US-Neural2-A")
+    CLOUD_TTS_LANGUAGE: str = os.getenv("CLOUD_TTS_LANGUAGE", "en-US")
+    CLOUD_TTS_SPEAKING_RATE: float = float(os.getenv("CLOUD_TTS_SPEAKING_RATE", "1.0"))
+    CLOUD_TTS_PITCH: float = float(os.getenv("CLOUD_TTS_PITCH", "0.0"))
     
     # CORS
     CORS_ORIGINS: List[str] = [

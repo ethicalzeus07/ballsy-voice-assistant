@@ -11,6 +11,10 @@ python-dotenv>=1.0.0
 
 # AI integration
 mistralai>=0.4.0
+google-genai>=0.2.0
+
+# Google Cloud Text-to-Speech
+google-cloud-texttospeech>=2.21.0
 
 # Speech recognition
 SpeechRecognition>=3.10.0
