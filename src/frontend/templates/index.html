@@ -165,7 +165,7 @@
 
       if (window.sendCommandFallback) {
         // Check if already processing to prevent concurrent requests
-        if (window.isProcessing) {
+        if (window.isProcessing || (window.voiceFunctions && window.voiceFunctions.isProcessing)) {
           console.warn('⚠️ Already processing a request, please wait...');
           return;
         }

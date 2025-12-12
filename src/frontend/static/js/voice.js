@@ -389,7 +389,7 @@ async function sendCommandFallback(command) {
         });
         
         if (data.audio_base64 && data.audio_base64.length > 10 && typeof window.playGeminiAudio === 'function') {
-            console.log('🎤 Using Gemini TTS audio (length:', data.audio_base64.length, 'chars)');
+            console.log('🎤 ✅ Using Gemini TTS audio (length:', data.audio_base64.length, 'chars)');
             // Store response text for fallback if audio playback fails
             if (!window.appState) window.appState = {};
             window.appState.lastResponse = data.response;
