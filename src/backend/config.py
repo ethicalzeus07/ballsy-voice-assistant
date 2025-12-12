@@ -27,6 +27,9 @@ class Config:
     # AI (Gemini)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+    GEMINI_TTS_MODEL: str = os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-tts")
+    GEMINI_TTS_VOICE: str = os.getenv("GEMINI_TTS_VOICE", "Kore")
+    ENABLE_GEMINI_TTS: bool = os.getenv("ENABLE_GEMINI_TTS", "true").lower() == "true"
     
     # CORS
     CORS_ORIGINS: List[str] = [

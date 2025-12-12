@@ -148,8 +148,12 @@ function handleCommandResponse(response) {
     // Update UI state
     updateUIState('speaking');
     
-    // Speak the response
-    speakText(response.response);
+    // Use Gemini TTS audio if provided, otherwise fall back to browser TTS
+    if (response.audio_base64 && window.playGeminiAudio) {
+        playGeminiAudio(response.audio_base64);
+    } else {
+        speakText(response.response);
+    }
     
     // Handle any actions
     if (response.action) {

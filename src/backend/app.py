@@ -36,6 +36,7 @@ import speech_recognition as sr
 from src.backend.config import config
 from src.backend.database import init_database, get_db_session, clear_conversation_history, CommandHistory, Setting, User
 from src.backend.ai import generate_reply
+from src.backend.tts import synthesize_speech_base64
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -146,9 +147,10 @@ class CommandRequest(BaseModel):
 
 
 class CommandResponse(BaseModel):
-   response: str
-   action: Optional[str] = None
-   data: Optional[Dict[str, Any]] = None
+    response: str
+    action: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+    audio_base64: Optional[str] = None  # Base64-encoded audio from Gemini TTS
 
 
 class SettingsUpdate(BaseModel):
@@ -747,8 +749,9 @@ class CommandProcessor:
 
    async def _ai_fallback(self, prompt: str, user_id = 1) -> CommandResponse:
        """
-       Use Mistral AI for general responses. We inject recent conversation history so that the model
+       Use Gemini AI for general responses. We inject recent conversation history so that the model
        is aware of previous turns in this session. We limit the response to one concise sentence.
+       Also generates TTS audio if enabled.
        """
        # Get user-specific session memory
        session_memory = self._get_user_session(user_id)
@@ -768,7 +771,25 @@ class CommandProcessor:
            # Ensure single-sentence
            sentences = re.split(r'(?<=[.!?])\s+', raw_reply)
            final_reply = sentences[0] if len(sentences) > 1 else raw_reply
-           return CommandResponse(response=final_reply)
+           
+           # Generate TTS audio if enabled
+           audio_base64 = None
+           if config.ENABLE_GEMINI_TTS:
+               try:
+                   audio_base64 = synthesize_speech_base64(
+                       text=final_reply,
+                       voice_name=config.GEMINI_TTS_VOICE,
+                       model=config.GEMINI_TTS_MODEL
+                   )
+                   if audio_base64:
+                       logger.debug(f"Generated TTS audio for response (length: {len(audio_base64)} chars)")
+               except Exception as tts_error:
+                   logger.warning(f"TTS generation failed, falling back to browser TTS: {tts_error}")
+           
+           return CommandResponse(
+               response=final_reply,
+               audio_base64=audio_base64
+           )
        except Exception as e:
            logger.error(f"Gemini AI error: {e}")
            return CommandResponse(

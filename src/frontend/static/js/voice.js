@@ -67,6 +67,65 @@ function initTextToSpeech() {
 
 
 /**
+ * Play Gemini TTS audio from base64-encoded PCM data
+ * @param {string} audioBase64 - Base64-encoded PCM audio data
+ */
+function playGeminiAudio(audioBase64) {
+    try {
+        // Decode base64 audio
+        const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
+        
+        // Create AudioContext for PCM playback
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Gemini TTS returns PCM at 24kHz, 16-bit, mono
+        const sampleRate = 24000;
+        const channels = 1;
+        const bitsPerSample = 16;
+        
+        // Convert PCM bytes to Float32Array
+        const samples = new Float32Array(audioBytes.length / 2);
+        for (let i = 0; i < samples.length; i++) {
+            // Read 16-bit signed integer (little-endian)
+            const int16 = (audioBytes[i * 2 + 1] << 8) | audioBytes[i * 2];
+            // Convert to signed (-32768 to 32767)
+            const signed = int16 > 32767 ? int16 - 65536 : int16;
+            // Normalize to -1.0 to 1.0
+            samples[i] = signed / 32768.0;
+        }
+        
+        // Create audio buffer
+        const audioBuffer = audioContext.createBuffer(channels, samples.length, sampleRate);
+        audioBuffer.getChannelData(0).set(samples);
+        
+        // Create source and play
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+        
+        // Update UI state
+        isSpeaking = true;
+        updateUIStateFallback('speaking');
+        
+        source.onended = () => {
+            console.log('🔊 Finished playing Gemini audio');
+            isSpeaking = false;
+            updateUIStateFallback('idle');
+        };
+        
+        source.start(0);
+        console.log('🔊 Started playing Gemini TTS audio');
+        
+    } catch (error) {
+        console.error('❌ Error playing Gemini audio, falling back to browser TTS:', error);
+        // Fallback to browser TTS if audio playback fails
+        if (window.appState && window.appState.lastResponse) {
+            speakText(window.appState.lastResponse);
+        }
+    }
+}
+
+/**
  * Speak text using browser's text-to-speech API
  */
 function speakText(text) {
@@ -445,6 +504,7 @@ window.voiceFunctions = {
     startListening,
     stopListening,
     speakText,
+    playGeminiAudio,
     initSpeechRecognition,
     initTextToSpeech,
     setupVoiceOrbClickHandler
@@ -453,6 +513,7 @@ window.voiceFunctions = {
 window.startListening = startListening;
 window.stopListening  = stopListening;
 window.speakText      = speakText;
+window.playGeminiAudio = playGeminiAudio;
 
 
 // ──────────────────────────────────────────────────────────────────────────────
