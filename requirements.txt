@@ -1,0 +1,39 @@
+# Production dependencies for Ballsy Voice Assistant
+# For Google Cloud deployment
+
+# Core framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+flask>=2.3.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# AI integration
+mistralai>=0.4.0
+
+# Speech recognition
+SpeechRecognition>=3.10.0
+
+# Data validation
+pydantic>=2.0.0
+
+# File handling
+python-multipart>=0.0.6
+
+# WebSocket support
+websockets>=11.0.0
+
+# Templating
+jinja2>=3.1.0
+
+# Database (PostgreSQL for production)
+asyncpg>=0.28.0
+psycopg2-binary>=2.9.0
+
+# Redis (for session storage and rate limiting)
+redis>=5.0.0
+
+# HTTP client (for health checks)
+requests>=2.31.0
+
