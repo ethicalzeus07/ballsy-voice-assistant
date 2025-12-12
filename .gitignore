@@ -64,6 +64,13 @@ temp_audio_*.wav
 *.tmp
 *.temp
 
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+*.tfvars.backup
+
 # Node modules (if any)
 node_modules/
 
