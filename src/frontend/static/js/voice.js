@@ -341,6 +341,9 @@ function stopListening() {
 async function sendCommandFallback(command) {
     console.log('📤 Sending command to Ballsy:', command);
 
+    // Set processing state BEFORE sending
+    updateUIStateFallback('processing');
+
     try {
         // Generate or get user ID for this session
         // Backend expects numeric user_id; use a stable numeric ID for this client
