@@ -5,10 +5,6 @@
 ## 🚀 **LIVE DEMO (Click to Launch)**
 ### 👉 **https://ballsy-voice-assistant-y33jmo2jgq-uc.a.run.app/**
 
-<a href="https://ballsy-voice-assistant-y33jmo2jgq-uc.a.run.app/">
-  <img alt="Live Demo" src="https://img.shields.io/badge/LIVE%20DEMO-Open%20Ballsy%20Now-00C853?style=for-the-badge&logo=googlechrome&logoColor=white">
-</a>
-
 <br/>
 
 Full-stack AI voice assistant with a Siri-like UI, powered by **Google Gemini AI** — witty, confident, and psychologically grounded. Speak or type for concise, context-aware answers and action-ready commands (open sites, maps, media) in a slick animated interface.
