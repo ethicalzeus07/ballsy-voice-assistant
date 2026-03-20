@@ -20,17 +20,6 @@ Full-stack AI voice assistant with a Siri-like UI, powered by **Google Gemini AI
 
 ---
 
-## ✅ Try Ballsy in 10 seconds
-
-1) Open the live app: **https://ballsy-voice-assistant-y33jmo2jgq-uc.a.run.app/**  
-2) Allow microphone permissions (optional)  
-3) Click the orb and say:  
-- “Open YouTube”  
-- “Directions to Central Park”  
-- “5 + 10” then “+ 3”  
-- “Give me tough love motivation for the gym”
-
-
 
 </details>
 
