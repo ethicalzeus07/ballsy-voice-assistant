@@ -2,8 +2,6 @@
 
 # 🎤 Ballsy Voice Assistant
 
-## 🚀 **LIVE DEMO (Click to Launch)**
-### 👉 **https://ballsy-voice-assistant-y33jmo2jgq-uc.a.run.app/**
 
 <br/>
 
