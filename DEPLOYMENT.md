@@ -1,283 +1,125 @@
-# Ballsy Voice Assistant - GCP Deployment Guide
+# Ballsy Production Deployment
 
-This guide provides step-by-step instructions for deploying Ballsy Voice Assistant to Google Cloud Platform using Terraform.
+This guide deploys Ballsy with a Render backend and a Vercel frontend.
 
-## Prerequisites
+## Target Setup
 
-1. **Google Cloud Account** with:
-   - A GCP project created
-   - Billing enabled (free trial credits work)
-   - `gcloud` CLI installed and authenticated
-   - Terraform installed (>= 1.0)
+- Render runs the FastAPI backend.
+- Neon Free Postgres stores production data.
+- Vercel hosts the static frontend.
+- NVIDIA NIM provides AI responses.
+- Browser Web Speech handles text-to-speech, so there is no hosted TTS cost.
 
-2. **Local Setup**:
-   ```bash
-   # Verify gcloud is authenticated
-   gcloud auth login
-   gcloud config set project YOUR_PROJECT_ID
-   
-   # Verify Terraform
-   terraform version
-   ```
+## 1. Database on Neon
 
-3. **Gemini API Key**:
-   - Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Keep it ready for step 3
+Create a Neon project named `ballsy`, then copy its pooled connection string. It should look like this:
 
-## Deployment Steps
-
-### Step 1: Set Environment Variables
-
-```bash
-export PROJECT_ID="your-gcp-project-id"
-export REGION="us-central1"
+```env
+DATABASE_URL=postgresql://user:password@ep-example.region.aws.neon.tech/ballsy?sslmode=require
 ```
 
-### Step 2: Initialize and Apply Terraform
+Use the pooled connection string if Neon offers both pooled and direct options. Render free services can restart and reconnect often, so pooling is friendlier.
 
-```bash
-cd infra
+## 2. Backend on Render
 
-# Initialize Terraform
-terraform init
+Create a new Render Web Service from this repository, or use the included `render.yaml` blueprint.
 
-# Review the plan
-terraform plan \
-  -var="project_id=$PROJECT_ID" \
-  -var="region=$REGION"
+Render settings:
 
-# Apply infrastructure (this will take 5-10 minutes)
-terraform apply \
-  -var="project_id=$PROJECT_ID" \
-  -var="region=$REGION"
+```text
+Runtime: Python
+Build Command: pip install -r requirements.txt
+Start Command: uvicorn src.backend.app:app --host 0.0.0.0 --port $PORT
+Health Check Path: /health
 ```
 
-**What this creates:**
-- Cloud SQL PostgreSQL instance (db-f1-micro)
-- Artifact Registry Docker repository
-- Secret Manager secrets (containers)
-- Cloud Run service (not yet deployed)
-- IAM service account with proper permissions
+Set these Render environment variables:
 
-### Step 3: Set Secret Values
-
-After Terraform creates the secret containers, set the actual secret values:
-
-```bash
-# Set Gemini API key
-echo -n "YOUR_GEMINI_API_KEY" | gcloud secrets versions add gemini-api-key \
-  --data-file=- \
-  --project=$PROJECT_ID
-
-# Verify the database URL secret was created by Terraform
-gcloud secrets versions access latest \
-  --secret=database-url \
-  --project=$PROJECT_ID
+```env
+ENVIRONMENT=production
+PYTHON_VERSION=3.11.9
+NVIDIA_API_KEY=your_nvidia_key
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=mistralai/mistral-nemotron
+DATABASE_URL=postgresql://user:password@ep-example.region.aws.neon.tech/ballsy?sslmode=require
+CORS_ORIGINS=https://your-vercel-app.vercel.app
+ALLOWED_HOSTS=your-render-service.onrender.com
+USE_CLOUD_TTS=false
+USE_CLOUDFLARE_TTS=false
+ENABLE_GEMINI_TTS=false
 ```
 
-### Step 4: Build and Push Docker Image
+Important production note: Render free web services can sleep after inactivity. That is okay for demos, but first requests after sleep may feel slow.
 
-```bash
-# Get the image URL from Terraform output
-IMAGE_URL=$(terraform output -raw artifact_registry_url)
+## 3. Frontend on Vercel
 
-# Configure Docker to use gcloud as credential helper
-gcloud auth configure-docker $REGION-docker.pkg.dev
+Create a Vercel project from the same repository.
 
-# Build and push the image
-gcloud builds submit --tag $IMAGE_URL:latest \
-  --project=$PROJECT_ID \
-  --region=$REGION
+Vercel should use the included `vercel.json`:
+
+```json
+{
+  "buildCommand": "bash scripts/build_frontend.sh",
+  "outputDirectory": "src/frontend/dist",
+  "cleanUrls": true,
+  "trailingSlash": false
+}
 ```
 
-**Alternative:** If you prefer to build locally:
+Set this Vercel environment variable:
 
-```bash
-# Authenticate Docker
-gcloud auth configure-docker $REGION-docker.pkg.dev
-
-# Build locally
-docker build -t $IMAGE_URL:latest .
-
-# Push to Artifact Registry
-docker push $IMAGE_URL:latest
+```env
+BALLSY_BACKEND_URL=https://your-render-service.onrender.com
 ```
 
-### Step 5: Update Cloud Run Service
+Deploy the frontend. The build script copies the existing HTML/CSS/JS app into `src/frontend/dist` and injects the backend URL.
 
-The Cloud Run service is already created by Terraform, but you need to update it with the new image:
+## 4. Connect CORS and Hosts
 
-```bash
-# Get service name
-SERVICE_NAME=$(terraform output -raw cloud_run_service_name)
+After Vercel gives you the final frontend URL, update Render:
 
-# Update the service with the new image
-gcloud run services update $SERVICE_NAME \
-  --image=$IMAGE_URL:latest \
-  --region=$REGION \
-  --project=$PROJECT_ID
+```env
+CORS_ORIGINS=https://your-vercel-app.vercel.app
 ```
 
-**Or** update via Terraform by setting the image tag variable and re-running `terraform apply`.
+After Render gives you the final backend host, update Render:
 
-### Step 6: Run Database Migrations
-
-Connect to Cloud SQL and run migrations:
-
-```bash
-# Get connection details
-DB_CONNECTION=$(terraform output -raw database_instance_connection_name)
-DB_NAME=$(terraform output -raw database_name)
-DB_USER=$(terraform output -raw database_user)
-DB_PASSWORD=$(terraform output -raw database_password)
-
-# Option 1: Using Cloud SQL Proxy (recommended for local)
-# Install Cloud SQL Proxy if needed:
-# https://cloud.google.com/sql/docs/postgres/connect-instance-auth-proxy
-
-# Start proxy in background
-cloud_sql_proxy -instances=$DB_CONNECTION=tcp:5432 &
-
-# Set DATABASE_URL for migrations
-export DATABASE_URL="postgresql+psycopg2://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME"
-
-# Run migrations
-python scripts/migrate_db.py
-
-# Stop proxy
-pkill cloud_sql_proxy
-
-# Option 2: Using gcloud sql connect (requires authorized network or Cloud Shell)
-gcloud sql connect $DB_CONNECTION --user=$DB_USER --database=$DB_NAME
-# Then run: alembic upgrade head
+```env
+ALLOWED_HOSTS=your-render-service.onrender.com
 ```
 
-**Alternative:** Run migrations from Cloud Shell:
+After Render gives you the final backend URL, update Vercel:
 
-```bash
-# Open Cloud Shell
-gcloud cloud-shell ssh
-
-# Clone your repo
-git clone YOUR_REPO_URL
-cd ballsy-voice-assistant-main
-
-# Set DATABASE_URL (use the connection name format)
-export DATABASE_URL="postgresql+psycopg2://$DB_USER:$DB_PASSWORD@/$DB_NAME?host=/cloudsql/$DB_CONNECTION"
-
-# Install dependencies and run migrations
-pip install -r requirements.txt
-python scripts/migrate_db.py
+```env
+BALLSY_BACKEND_URL=https://your-render-service.onrender.com
 ```
 
-### Step 7: Test the Deployment
+Redeploy both services after changing these variables.
+
+## 5. Verify Production
+
+Backend checks:
 
 ```bash
-# Get the Cloud Run URL
-SERVICE_URL=$(terraform output -raw cloud_run_url)
-
-# Test health endpoint
-curl $SERVICE_URL/health
-
-# Test readiness endpoint
-curl $SERVICE_URL/ready
-
-# Open in browser
-echo "Open this URL in your browser: $SERVICE_URL"
+curl https://your-render-service.onrender.com/health
+curl https://your-render-service.onrender.com/ready
 ```
 
-## Post-Deployment
+Frontend checks:
 
-### View Logs
+- Open the Vercel URL.
+- Type a message and confirm Ballsy responds.
+- Click the orb and allow microphone permission.
+- Confirm the page does not scroll down as the conversation grows.
+- Confirm audio comes from browser WebTTS and does not require Cloudflare, Gemini, or Google Cloud TTS.
 
-```bash
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=$SERVICE_NAME" \
-  --limit 50 \
-  --project=$PROJECT_ID
-```
+## 6. Recommended Launch Checklist
 
-### Monitor Costs
-
-- Check billing dashboard: https://console.cloud.google.com/billing
-- Cloud SQL db-f1-micro is very cheap (~$7/month)
-- Cloud Run scales to zero when not in use (free tier: 2 million requests/month)
-
-### Update CORS Origins
-
-If you need to restrict CORS:
-
-```bash
-# Update Terraform variable
-terraform apply \
-  -var="project_id=$PROJECT_ID" \
-  -var="region=$REGION" \
-  -var="cors_origins=https://yourdomain.com,https://www.yourdomain.com"
-```
-
-Then update the Cloud Run service:
-
-```bash
-gcloud run services update $SERVICE_NAME \
-  --update-env-vars CORS_ORIGINS="https://yourdomain.com,https://www.yourdomain.com" \
-  --region=$REGION \
-  --project=$PROJECT_ID
-```
-
-## Troubleshooting
-
-### Cloud Run can't connect to Cloud SQL
-
-- Verify the service account has `roles/cloudsql.client`
-- Check that Cloud SQL instance has private IP enabled
-- Verify the `DATABASE_URL` uses the Unix socket format: `postgresql+psycopg2://user:pass@/dbname?host=/cloudsql/INSTANCE_CONNECTION_NAME`
-
-### Secrets not accessible
-
-- Verify service account has `roles/secretmanager.secretAccessor`
-- Check secret versions exist: `gcloud secrets versions list SECRET_NAME`
-
-### Database connection errors
-
-- Verify migrations ran successfully
-- Check Cloud SQL instance is running: `gcloud sql instances describe INSTANCE_NAME`
-- Test connection using Cloud SQL Proxy locally
-
-### Image build fails
-
-- Check Cloud Build logs: `gcloud builds list --limit=5`
-- Verify Dockerfile syntax
-- Ensure all dependencies are in `pyproject.toml`
-
-## Cost Optimization
-
-This setup is optimized for the free tier:
-
-- **Cloud Run**: Scales to zero, 2M requests/month free
-- **Cloud SQL**: db-f1-micro is the smallest tier (~$7/month)
-- **Artifact Registry**: 0.5 GB free storage
-- **Secret Manager**: First 6 secrets free
-- **Logging**: 50 GB free per month
-
-**Estimated monthly cost**: ~$7-10 (mostly Cloud SQL)
-
-## Cleanup
-
-To destroy all resources:
-
-```bash
-cd infra
-terraform destroy \
-  -var="project_id=$PROJECT_ID" \
-  -var="region=$REGION"
-```
-
-**Warning**: This will delete the database and all data!
-
-## Next Steps
-
-- Set up custom domain
-- Configure Cloud CDN for static assets
-- Set up monitoring alerts
-- Enable automated backups
-- Configure CI/CD pipeline
-
+- Keep `.env` and provider keys out of git.
+- Use production-only CORS origins instead of `*`.
+- Use production-only allowed hosts instead of `*`.
+- Keep WebTTS enabled unless you intentionally switch to a hosted TTS provider.
+- Confirm Render logs do not show missing `NVIDIA_API_KEY`.
+- Confirm Render logs can connect to Neon with SSL enabled.
+- Confirm the first Render request after sleep is acceptable for your use case.
+- Add a custom domain only after the Render/Vercel deploy works on default URLs.

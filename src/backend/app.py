@@ -4,7 +4,7 @@ Backend application for the full-stack voice assistant with Siri-like UI.
 This module provides the core backend functionality including:
 - FastAPI server with REST and WebSocket endpoints
 - Speech recognition and processing
-- AI integration with Gemini
+- AI integration with NVIDIA NIM
 - Command processing and execution
 - External service integration
 - Auto-clear conversation history on startup
@@ -36,8 +36,6 @@ import speech_recognition as sr
 from src.backend.config import config
 from src.backend.database import init_database, get_db_session, clear_conversation_history, CommandHistory, Setting, User
 from src.backend.ai import generate_reply
-from src.backend.tts import synthesize_speech_base64
-from src.backend.tts_google import synthesize_tts_base64
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -102,7 +100,7 @@ app.add_middleware(
 # Security: Add trusted host middleware
 app.add_middleware(
    TrustedHostMiddleware,
-   allowed_hosts=["*"] if not config.is_production() else config.CORS_ORIGINS
+   allowed_hosts=config.ALLOWED_HOSTS
 )
 
 
@@ -151,7 +149,7 @@ class CommandResponse(BaseModel):
     response: str
     action: Optional[str] = None
     data: Optional[Dict[str, Any]] = None
-    audio_base64: Optional[str] = None  # Base64-encoded audio from Gemini TTS
+    audio_base64: Optional[str] = None  # Optional hosted TTS audio; browser WebTTS is the default.
 
 
 class SettingsUpdate(BaseModel):
@@ -623,14 +621,23 @@ class CommandProcessor:
            "content": response_data.response
        })
 
-       # 4) Generate TTS audio - prefer Cloud TTS, fallback to Gemini TTS
+       # 4) Generate optional hosted TTS audio. Browser WebTTS is the default production voice path.
        if not response_data.audio_base64 and response_data.response:
            try:
                logger.debug(f"Generating TTS for: '{response_data.response[:50]}...'")
+
+               if config.USE_CLOUDFLARE_TTS:
+                   from src.backend.tts_cloudflare import synthesize_cloudflare_tts_base64
+
+                   audio_base64 = synthesize_cloudflare_tts_base64(response_data.response)
+                   if audio_base64:
+                       response_data.audio_base64 = audio_base64
                
-               # Prefer Google Cloud TTS (better quality, free tier)
-               if config.USE_CLOUD_TTS:
+               # Optional Google Cloud TTS fallback.
+               if not response_data.audio_base64 and config.USE_CLOUD_TTS:
                    try:
+                       from src.backend.tts_google import synthesize_tts_base64
+
                        audio_base64 = synthesize_tts_base64(
                            text=response_data.response,
                            language_code=config.CLOUD_TTS_LANGUAGE,
@@ -642,15 +649,17 @@ class CommandProcessor:
                            response_data.audio_base64 = audio_base64
                            logger.info(f"✅ Generated Cloud TTS audio (length: {len(audio_base64)} chars)")
                        else:
-                           logger.warning("Cloud TTS returned None, trying Gemini TTS fallback")
+                           logger.warning("Cloud TTS returned None, trying legacy Gemini TTS fallback")
                            raise ValueError("Cloud TTS returned None")
                    except Exception as cloud_tts_error:
-                       logger.warning(f"Cloud TTS failed: {cloud_tts_error}, trying Gemini TTS fallback")
-                       # Fall through to Gemini TTS
+                       logger.warning(f"Cloud TTS failed: {cloud_tts_error}, trying legacy Gemini TTS fallback")
+                       # Fall through to legacy Gemini TTS
                
-               # Fallback to Gemini TTS if Cloud TTS is disabled or failed
+               # Legacy Gemini TTS fallback if explicitly enabled.
                if not response_data.audio_base64 and config.ENABLE_GEMINI_TTS:
                    try:
+                       from src.backend.tts import synthesize_speech_base64
+
                        audio_base64 = synthesize_speech_base64(text=response_data.response)
                        if audio_base64:
                            response_data.audio_base64 = audio_base64
@@ -720,7 +729,7 @@ class CommandProcessor:
        # Get user-specific session memory
        session_memory = self._get_user_session(user_id)
        
-       # Build conversation history for Gemini
+       # Build recent conversation history for the configured AI provider.
        conversation_history = session_memory["conversation_history"][-6:]
        
        if is_person:
@@ -788,14 +797,14 @@ class CommandProcessor:
 
    async def _ai_fallback(self, prompt: str, user_id = 1) -> CommandResponse:
        """
-       Use Gemini AI for general responses. We inject recent conversation history so that the model
+       Use the configured AI provider for general responses. We inject recent conversation history so that the model
        is aware of previous turns in this session. We limit the response to one concise sentence.
        Also generates TTS audio if enabled.
        """
        # Get user-specific session memory
        session_memory = self._get_user_session(user_id)
        
-       # Build conversation history for Gemini
+       # Build recent conversation history for the configured AI provider.
        conversation_history = session_memory["conversation_history"][-6:]
        user_message = f"Answer this in a single concise sentence: {prompt}"
 
@@ -811,10 +820,17 @@ class CommandProcessor:
            sentences = re.split(r'(?<=[.!?])\s+', raw_reply)
            final_reply = sentences[0] if len(sentences) > 1 else raw_reply
            
-           # Generate TTS audio - prefer Cloud TTS, fallback to Gemini TTS
+           # Generate optional hosted TTS audio; the browser will speak when no audio is returned.
            audio_base64 = None
-           if config.USE_CLOUD_TTS:
+           if config.USE_CLOUDFLARE_TTS:
+               from src.backend.tts_cloudflare import synthesize_cloudflare_tts_base64
+
+               audio_base64 = synthesize_cloudflare_tts_base64(final_reply)
+
+           if not audio_base64 and config.USE_CLOUD_TTS:
                try:
+                   from src.backend.tts_google import synthesize_tts_base64
+
                    audio_base64 = synthesize_tts_base64(
                        text=final_reply,
                        language_code=config.CLOUD_TTS_LANGUAGE,
@@ -827,9 +843,11 @@ class CommandProcessor:
                except Exception as cloud_tts_error:
                    logger.warning(f"Cloud TTS failed: {cloud_tts_error}")
            
-           # Fallback to Gemini TTS if Cloud TTS failed or is disabled
+           # Legacy Gemini TTS fallback if explicitly enabled.
            if not audio_base64 and config.ENABLE_GEMINI_TTS:
                try:
+                   from src.backend.tts import synthesize_speech_base64
+
                    audio_base64 = synthesize_speech_base64(text=final_reply)
                    if audio_base64:
                        logger.info(f"✅ Generated Gemini TTS audio (length: {len(audio_base64)} chars)")
@@ -843,7 +861,7 @@ class CommandProcessor:
                audio_base64=audio_base64
            )
        except Exception as e:
-           logger.error(f"Gemini AI error: {e}")
+           logger.error(f"AI provider error: {e}")
            return CommandResponse(
                response="Let me search for that",
                action="search",
@@ -867,7 +885,7 @@ templates = Jinja2Templates(directory=os.path.join(frontend_dir, "templates"))
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
    """Serve the main UI."""
-   return templates.TemplateResponse("index.html", {"request": request})
+   return templates.TemplateResponse(request, "index.html")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -899,7 +917,7 @@ async def debug_tts():
    from src.backend.tts import synthesize_pcm
    
    try:
-       _ = synthesize_pcm("This is a human-like Gemini voice test.")
+       _ = synthesize_pcm("This is a legacy hosted TTS voice test.")
        return JSONResponse(content={"ok": True, "message": "TTS synthesis successful"})
    except Exception as e:
        logger.error(f"TTS debug error: {e}", exc_info=True)
@@ -910,7 +928,7 @@ async def debug_tts():
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Google Cloud Text-to-Speech API Endpoint
+# Optional hosted Text-to-Speech API endpoint
 class TTSRequest(BaseModel):
     text: str
     language_code: Optional[str] = "en-US"
@@ -922,7 +940,7 @@ class TTSRequest(BaseModel):
 @app.post("/api/tts")
 async def tts_endpoint(body: TTSRequest):
    """
-   Synthesize text to speech using Google Cloud Text-to-Speech API.
+   Synthesize text to speech using the legacy Google Cloud Text-to-Speech API.
    Returns MP3 or OGG audio bytes.
    """
    from src.backend.tts_google import synthesize_tts
@@ -1127,6 +1145,3 @@ async def websocket_voice_endpoint(websocket: WebSocket, client_id: int):
 
 # ──────────────────────────────────────────────────────────────────────────────
 # End of file
-
-
-

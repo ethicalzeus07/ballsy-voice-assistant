@@ -1,0 +1,1 @@
+window.BALLSY_BACKEND_URL = window.BALLSY_BACKEND_URL || "";

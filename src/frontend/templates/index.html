@@ -8,7 +8,7 @@
   <!-- Your existing CSS -->
   <link rel="stylesheet" href="../static/css/styles.css" />
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap"
     rel="stylesheet"
   />
   <link
@@ -60,10 +60,14 @@
           </div>
         </div>
 
+        <div class="b-logo" aria-label="Ballsy logo">
+          <span>B</span>
+        </div>
         <h1 class="title">Ballsy</h1>
+        <p class="title-subcopy">A fast voice assistant for quick answers, useful actions, and easy conversation.</p>
 
         <!-- 1) Dark Mode Toggle Button -->
-        <button id="dark-toggle">🌙</button>
+        <button id="dark-toggle" aria-label="Toggle dark mode">☀</button>
       </div>
 
       <!-- Conversation History -->
@@ -91,6 +95,7 @@
           <!-- Main orb -->
           <div class="voice-orb idle" id="voice-orb">
             <div class="orb-inner"></div>
+            <i class="fas fa-microphone orb-icon" id="orb-icon"></i>
           </div>
         </div>
 
@@ -193,6 +198,13 @@
 
     function handleKeyPress(event) {
       if (event.key === 'Enter') sendMessage();
+    }
+
+    function usePrompt(prompt) {
+      const input = document.getElementById('text-command');
+      if (!input) return;
+      input.value = prompt;
+      input.focus();
     }
 
     function addMessage(sender, text) {
@@ -360,18 +372,28 @@
     // ====== DARK MODE SCRIPT ======
     document.addEventListener('DOMContentLoaded', () => {
       const darkToggle = document.getElementById('dark-toggle');
+      document.body.classList.add('dark-theme');
       darkToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
 
         // Switch the icon between Moon 🌙 and Sun ☀️
         if (document.body.classList.contains('dark-theme')) {
-          darkToggle.textContent = '☀️';
+          darkToggle.textContent = '☀';
         } else {
-          darkToggle.textContent = '🌙';
+          darkToggle.textContent = '☾';
         }
       });
     });
   </script>
+
+  <!-- Runtime config is generated for Vercel builds; the inline fallback keeps local dev working. -->
+  <script>
+    window.BALLSY_BACKEND_URL = window.BALLSY_BACKEND_URL || "__BALLSY_BACKEND_URL__";
+    if (window.BALLSY_BACKEND_URL.startsWith("__")) {
+      window.BALLSY_BACKEND_URL = "";
+    }
+  </script>
+  <script src="/static/js/config.js"></script>
 
   <!-- Your existing scripts -->
   <script src="/static/js/voice.js"></script>
@@ -385,15 +407,21 @@
 
       document
         .getElementById('voice-speed')
-        .addEventListener('input', updateRangeDisplays);
+        ?.addEventListener('input', updateRangeDisplays);
       document
         .getElementById('voice-pitch')
-        .addEventListener('input', updateRangeDisplays);
+        ?.addEventListener('input', updateRangeDisplays);
       document
         .getElementById('sensitivity')
-        .addEventListener('input', updateRangeDisplays);
+        ?.addEventListener('input', updateRangeDisplays);
 
-      updateRangeDisplays();
+      if (
+        document.getElementById('voice-speed') &&
+        document.getElementById('voice-pitch') &&
+        document.getElementById('sensitivity')
+      ) {
+        updateRangeDisplays();
+      }
 
       setTimeout(() => {
         console.log('🎤 Checking voice.js integration...');

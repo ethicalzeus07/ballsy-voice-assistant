@@ -17,6 +17,7 @@ class Config:
     # Server
     PORT: int = int(os.getenv("PORT", "8080"))
     HOST: str = os.getenv("HOST", "0.0.0.0")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # Database
     DATABASE_URL: str = os.getenv(
@@ -24,18 +25,30 @@ class Config:
         "sqlite:///./voice_assistant.db"  # Default for local dev
     )
     
-    # AI (Gemini)
+    # Legacy AI fallback (disabled by default)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp")
+
+    # AI (NVIDIA NIM)
+    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+    NVIDIA_BASE_URL: str = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "mistralai/mistral-nemotron")
     
     # TTS Configuration
-    # Option 1: Gemini TTS (uses dedicated TTS models)
+    # Hosted TTS fallbacks are disabled by default because the frontend uses browser WebTTS.
+    USE_CLOUDFLARE_TTS: bool = os.getenv("USE_CLOUDFLARE_TTS", "false").lower() == "true"
+    CLOUDFLARE_ACCOUNT_ID: str = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
+    CLOUDFLARE_API_TOKEN: str = os.getenv("CLOUDFLARE_API_TOKEN", "")
+    CLOUDFLARE_TTS_MODEL: str = os.getenv("CLOUDFLARE_TTS_MODEL", "@cf/myshell-ai/melotts")
+    CLOUDFLARE_TTS_LANG: str = os.getenv("CLOUDFLARE_TTS_LANG", "en")
+
+    # Legacy Gemini TTS fallback.
     GEMINI_TTS_MODEL: str = os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-tts")
     GEMINI_TTS_VOICE: str = os.getenv("GEMINI_TTS_VOICE", "Kore")
     ENABLE_GEMINI_TTS: bool = os.getenv("ENABLE_GEMINI_TTS", "false").lower() == "true"
     
-    # Option 2: Google Cloud Text-to-Speech (WaveNet/Neural2 voices - recommended)
-    USE_CLOUD_TTS: bool = os.getenv("USE_CLOUD_TTS", "true").lower() == "true"
+    # Legacy Google Cloud Text-to-Speech fallback.
+    USE_CLOUD_TTS: bool = os.getenv("USE_CLOUD_TTS", "false").lower() == "true"
     CLOUD_TTS_VOICE: str = os.getenv("CLOUD_TTS_VOICE", "en-US-Neural2-A")
     CLOUD_TTS_LANGUAGE: str = os.getenv("CLOUD_TTS_LANGUAGE", "en-US")
     CLOUD_TTS_SPEAKING_RATE: float = float(os.getenv("CLOUD_TTS_SPEAKING_RATE", "1.0"))
@@ -47,10 +60,16 @@ class Config:
         for origin in os.getenv("CORS_ORIGINS", "*").split(",")
         if origin.strip()
     ]
+
+    ALLOWED_HOSTS: List[str] = [
+        host.strip()
+        for host in os.getenv("ALLOWED_HOSTS", "*").split(",")
+        if host.strip()
+    ]
     
     # System Prompt
     SYSTEM_PROMPT: str = (
-        "Your name is Ballsy. You talk like Ryan Reynolds. "
+        "Your name is Ballsy. You talk like a calm, witty best friend. "
         "You are the reflection of Robert Greene and his books. "
         "You are a chill, smart best friend who's read every psychology book, "
         "lifts at 6 AM, pulls girls like a magician, and makes people laugh during breakdowns. "
@@ -73,8 +92,14 @@ class Config:
     
     @classmethod
     def is_production(cls) -> bool:
-        """Check if running in production (Cloud Run)."""
-        return os.getenv("K_SERVICE") is not None or os.getenv("GAE_ENV") is not None
+        """Check if running in production on a hosted platform."""
+        return (
+            cls.ENVIRONMENT.lower() == "production"
+            or os.getenv("K_SERVICE") is not None
+            or os.getenv("GAE_ENV") is not None
+            or os.getenv("RENDER") is not None
+            or os.getenv("RENDER_EXTERNAL_HOSTNAME") is not None
+        )
     
     @classmethod
     def is_sqlite(cls) -> bool:
@@ -84,4 +109,3 @@ class Config:
 
 # Global config instance
 config = Config()
-

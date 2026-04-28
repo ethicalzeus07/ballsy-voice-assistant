@@ -5,7 +5,6 @@ Replit-optimized launcher for Ballsy Voice Assistant
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 def main():
     """Main entry point for Replit deployment"""
@@ -14,13 +13,6 @@ def main():
     # Set environment variables for Replit
     os.environ['HOST'] = '0.0.0.0'
     os.environ['PORT'] = '5000'
-    
-    # Create .env if it doesn't exist
-    env_file = Path('.env')
-    if not env_file.exists():
-        with open('.env', 'w') as f:
-            f.write('MISTRAL_API_KEY=W7ubHcUDajunz3zrREm7zXya31Nlj9n2\n')
-        print("✅ Created .env file")
     
     # Use run.py with port 5000 for Replit
     try:

@@ -93,11 +93,15 @@ def _get_engine():
     global _engine
     if _engine is None:
         db_url = _get_db_url()
+        connect_args = {}
+        if not config.is_sqlite():
+            connect_args["connect_timeout"] = 5
+
         _engine = create_engine(
             db_url,
             pool_pre_ping=True,  # Verify connections before using
             echo=False,  # Set to True for SQL debugging
-            connect_args={"connect_timeout": 5}  # 5 second timeout
+            connect_args=connect_args
         )
     return _engine
 
@@ -217,4 +221,3 @@ def clear_conversation_history():
             logger.info("✨ Conversation history cleared - Fresh start for Ballsy!")
     except Exception as e:
         logger.error(f"Error clearing history: {e}")
-

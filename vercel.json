@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bash scripts/build_frontend.sh",
+  "outputDirectory": "src/frontend/dist",
+  "cleanUrls": true,
+  "trailingSlash": false
+}

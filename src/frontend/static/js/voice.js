@@ -1,6 +1,6 @@
 /**
  * Complete Voice Assistant with Speech Recognition AND Speech Synthesis
- * Now with "Ballsy" personality and voice responses
+ * Now with Ballsy personality and voice responses
  *
  * This version uses “one‐shot” (non‐continuous) recognition, so it only fires
  * a single final result when you stop speaking. It no longer auto‐restarts itself.
@@ -12,13 +12,13 @@ const SPEECH_TIMEOUT = 10000; // (not actively used)
 // Remove the global click debounce - this was preventing multiple users from using the system
 // const CLICK_DEBOUNCE = 2000;  // 2 seconds between orb clicks
 
-// Determine API and WebSocket endpoints dynamically based on the page origin
-const origin       = window.location.origin; // e.g., "https://ballsy.onrender.com"
-const API_BASE_URL = origin;                 // "/api/…" will be relative to this
-// We are not using WebSockets in this file, but kept here for reference in case you switch to WS:
-const WS_BASE_URL  = origin.startsWith("https://")
-    ? "wss://" + window.location.host
-    : "ws://"  + window.location.host;
+// Determine API and WebSocket endpoints dynamically for local, Render, and Vercel.
+const backendOrigin = (window.BALLSY_BACKEND_URL || window.location.origin).replace(/\/$/, '');
+const API_BASE_URL = backendOrigin;
+const backendUrl = new URL(backendOrigin);
+const WS_BASE_URL = backendUrl.protocol === "https:"
+    ? "wss://" + backendUrl.host
+    : "ws://"  + backendUrl.host;
 
 // State - Make these per-user instead of global
 let speechRecognition      = null;
@@ -35,8 +35,8 @@ let clickHandlerAttached   = false;
 // Voice settings (matching your backend defaults)
 let voiceSettings = {
     voice: 'Jamie(Premium)',
-    rate:  1.0,
-    pitch: 1.0,
+    rate:  0.95,
+    pitch: 0.98,
     volume:1.0
 };
 
@@ -68,15 +68,15 @@ function initTextToSpeech() {
 
 
 /**
- * Play Gemini TTS audio from base64-encoded PCM data
- * @param {string} audioBase64 - Base64-encoded PCM audio data
+ * Play backend TTS audio from a base64-encoded payload.
+ * @param {string} audioBase64 - Base64-encoded audio data
  */
 function playGeminiAudio(audioBase64) {
     try {
-        // Decode base64 audio (now MP3/OGG from Cloud TTS, not PCM)
-        // Create a blob URL and play it directly - much simpler!
+        // Decode base64 audio and infer MIME from common file signatures.
         const audioBytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
-        const blob = new Blob([audioBytes], { type: 'audio/mpeg' }); // Assume MP3 from Cloud TTS
+        const mimeType = audioBase64.startsWith('UklG') ? 'audio/wav' : 'audio/mpeg';
+        const blob = new Blob([audioBytes], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         
@@ -85,7 +85,7 @@ function playGeminiAudio(audioBase64) {
         updateUIStateFallback('speaking');
         
         audio.onended = () => {
-            console.log('🔊 Finished playing Cloud TTS audio');
+            console.log('🔊 Finished playing backend TTS audio');
             URL.revokeObjectURL(url);
             isSpeaking = false;
             isProcessing = false;
@@ -93,7 +93,7 @@ function playGeminiAudio(audioBase64) {
         };
         
         audio.onerror = (err) => {
-            console.error('❌ Error playing Cloud TTS audio:', err);
+            console.error('❌ Error playing backend TTS audio:', err);
             URL.revokeObjectURL(url);
             isSpeaking = false;
             isProcessing = false;
@@ -106,10 +106,10 @@ function playGeminiAudio(audioBase64) {
         };
         
         audio.play();
-        console.log('🔊 Started playing Cloud TTS audio (MP3)');
+        console.log(`🔊 Started playing backend TTS audio (${mimeType})`);
         
     } catch (error) {
-        console.error('❌ Error playing Cloud TTS audio, falling back to browser TTS:', error);
+        console.error('❌ Error playing backend TTS audio, falling back to browser TTS:', error);
         isProcessing = false;
         // Fallback to browser TTS if audio playback fails
         const lastMessage = document.querySelector('.assistant-message:last-child');
@@ -368,38 +368,11 @@ async function sendCommandFallback(command) {
         const data = await response.json();
         console.log('✅ Ballsy response:', data);
 
-        // Display Ballsy’s response in the conversation UI
+        // Display Ballsy's response in the conversation UI
         addMessageToConversationFallback('assistant', data.response);
 
-        // Use Gemini TTS audio if provided, otherwise fall back to browser TTS
-        console.log('🔍 Checking audio_base64:', {
-            has_audio: !!data.audio_base64,
-            audio_length: data.audio_base64 ? data.audio_base64.length : 0,
-            has_playGeminiAudio: typeof window.playGeminiAudio === 'function'
-        });
-        
-        if (data.audio_base64 && data.audio_base64.length > 10 && typeof window.playGeminiAudio === 'function') {
-            console.log('🎤 ✅ Using Gemini TTS audio (length:', data.audio_base64.length, 'chars)');
-            // Store response text for fallback if audio playback fails
-            if (!window.appState) window.appState = {};
-            window.appState.lastResponse = data.response;
-            try {
-                playGeminiAudio(data.audio_base64);
-            } catch (err) {
-                console.error('❌ Error calling playGeminiAudio:', err);
-                speakText(data.response);
-            }
-        } else {
-            if (!data.audio_base64) {
-                console.log('⚠️ No audio_base64 in response');
-            } else if (data.audio_base64.length <= 10) {
-                console.log('⚠️ audio_base64 too short:', data.audio_base64.length);
-            } else if (typeof window.playGeminiAudio !== 'function') {
-                console.log('⚠️ playGeminiAudio function not available');
-            }
-            console.log('🎤 Falling back to browser TTS');
-            speakText(data.response);
-        }
+        console.log('🎤 Using browser Web Speech TTS');
+        speakText(data.response);
 
         // Handle “open_url” action if provided
         if (data.action === 'open_url' && data.data?.url) {
@@ -568,10 +541,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setupVoiceOrbClickHandler();
     }, 500);
 
-    // Update the header title to show "Ballsy" instead of generic "Voice Assistant"
+    // Keep the Ballsy product name if legacy markup is loaded.
     const title = document.querySelector('h1');
     if (title && title.textContent.includes('Voice Assistant')) {
-        title.textContent = 'Ballsy - Voice Assistant';
+        title.textContent = 'Ballsy';
     }
 });
 

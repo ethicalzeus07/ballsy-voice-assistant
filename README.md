@@ -1,330 +1,112 @@
-<div align="center">
+# Ballsy Voice Assistant
 
-# 🎤 Ballsy Voice Assistant
+Ballsy is a full-stack voice assistant with a simple orb UI, fast browser speech input, browser Web Speech text-to-speech, and NVIDIA NIM for AI responses. It is designed to feel conversational, useful, and lightweight enough to deploy with a Render backend and Vercel frontend.
 
+## What It Does
 
-<br/>
+- Voice and text chat through a minimal web interface.
+- NVIDIA-hosted model responses through an OpenAI-compatible API.
+- Browser WebTTS for natural-ish, fast, no-extra-cost speech output.
+- Smart command handling for searches, links, maps, media, math, and normal conversation.
+- FastAPI backend with REST and WebSocket support.
+- SQLAlchemy database support for local SQLite and production Postgres.
+- Production config for Render backend and Vercel frontend.
 
-Full-stack AI voice assistant with a Siri-like UI, powered by **Google Gemini AI** — witty, confident, and psychologically grounded. Speak or type for concise, context-aware answers and action-ready commands (open sites, maps, media) in a slick animated interface.
-
-**☁️ Deployed on Google Cloud Run + PostgreSQL (Cloud SQL) + Gemini AI**
-
-![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688?logo=fastapi)
-![Google Gemini](https://img.shields.io/badge/Google%20Gemini-enabled-4285F4?logo=google)
-![GCP Cloud Run](https://img.shields.io/badge/GCP-Cloud%20Run-4285F4?logo=googlecloud)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?logo=git)
-
-</div>
-
----
-
-
-</details>
-
----
-
-## ✨ Features
-
-- **Voice recognition**: One-shot browser speech recognition with real-time UI states  
-- **AI answers**: Google Gemini AI for concise, context-aware responses  
-- **Smart commands**: Search the web, open services (YouTube, Netflix, Spotify), maps/directions, news  
-- **Math**: Inline calculations and chained operations (e.g., `+ 10`)  
-- **WebSocket + REST**: Real-time updates and HTTP fallbacks  
-- **Siri-like UI**: Animated orb, typing indicator, dark mode  
-- **Multi-user support**: Multiple users can use the system simultaneously without conflicts  
-- **Security protections**: Rate limiting, DDoS protection, input validation, and session management  
-- **Cloud-native**: Deployed on GCP Cloud Run with PostgreSQL (Cloud SQL) and Secret Manager  
-
----
-
-## 🤘 Why Ballsy feels different
-
-- **Friend-first persona**: Teases and motivates (light roasting), listens, and gives practical advice after real back-and-forth.  
-- **Crafted voice**: Witty, confident, and psychologically grounded.  
-- **Context-aware by design**: Each request includes recent conversation turns, so Ballsy stays on-thread (within a server session).  
-- **Concise on purpose**: Defaults to high-signal answers; expands only when needed.  
-- **Action-first responses**: Recognized intents return actions (`open_url`, `search`) so the UI can *do* things immediately.  
-- **Grounded honesty**: When uncertain, it falls back to helpful searches instead of guessing.  
-
-**Model**: `gemini-2.0-flash-exp`
-
----
-
-## 🧠 Architecture (high-level)
+## Architecture
 
 ```mermaid
 flowchart LR
-  U[User\nVoice / Text] --> F[Frontend\nHTML/CSS/JS Orb UI]
-  F -->|WebSocket| B[Backend\nFastAPI]
-  F -->|REST Fallback| B
-  B --> G[Gemini AI\nResponse + Intent]
-  B --> D[(PostgreSQL\nCloud SQL)]
-  B --> S[Security Layer\nRate limit, validation,\nsessions, trusted hosts]
-  G --> B --> F
-````
-
----
-
-## 🚀 Quick start (Local Development)
-
-**Prerequisites**
-
-* Python 3.8+
-* Microphone access + Internet
-* `GEMINI_API_KEY` ([https://makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey))
-
-### 1) Clone and enter the project
-
-```bash
-git clone https://github.com/ethicalzeus07/ballsy-voice-assistant.git
-cd ballsy-voice-assistant
+  U[User voice or text] --> F[Vercel frontend]
+  F -->|REST or WebSocket| B[Render FastAPI backend]
+  B --> N[NVIDIA NIM chat completions]
+  B --> D[(Postgres in production or SQLite locally)]
+  F --> T[Browser Web Speech TTS]
 ```
 
-### 2) Create a virtual environment
+## Local Setup
+
+Create a virtual environment and install dependencies:
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-### 3) Install dependencies
-
-```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-# Or manually:
-pip install -U fastapi uvicorn[standard] flask python-dotenv google-genai SpeechRecognition pydantic python-multipart websockets jinja2 sqlalchemy psycopg2-binary alembic
 ```
 
-### 4) Configure environment variables
+Create `.env` from the example and add your NVIDIA key:
 
 ```bash
-echo "GEMINI_API_KEY=your_gemini_api_key_here" > .env
-echo "DATABASE_URL=sqlite:///./voice_assistant.db" >> .env  # SQLite for local dev
+cp .env.example .env
 ```
 
-### 5) Run the app
+Minimum local `.env`:
+
+```env
+NVIDIA_API_KEY=your_nvidia_key
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=mistralai/mistral-nemotron
+DATABASE_URL=sqlite:///./voice_assistant.db
+USE_CLOUD_TTS=false
+USE_CLOUDFLARE_TTS=false
+ENABLE_GEMINI_TTS=false
+```
+
+Run the app:
 
 ```bash
 python run.py
-# then open http://localhost:8000
 ```
 
-**Dev reload (alternative)**
+Then open `http://localhost:8000`.
 
-```bash
-uvicorn src.backend.app:app --host 0.0.0.0 --port 8000 --reload
-```
+## Production Deployment
 
----
+The current free target setup is:
 
-## ☁️ Deploy to Google Cloud Platform
+- Backend: Render web service running `uvicorn src.backend.app:app --host 0.0.0.0 --port $PORT`.
+- Database: Neon Free Postgres.
+- Frontend: Vercel static build from `scripts/build_frontend.sh`.
+- AI: NVIDIA API key stored only in Render environment variables.
+- Voice: Browser Web Speech API, so no TTS hosting is required.
 
-Ballsy is production-ready on GCP. Deploy with Terraform.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for exact Neon, Render, and Vercel steps.
 
-**Prerequisites**
+## Important Environment Variables
 
-* GCP project with billing enabled
-* `gcloud` CLI installed and authenticated
-* Terraform (>= 1.0)
-* Gemini API key
-
-**Quick Deploy**
-
-```bash
-# See detailed instructions in DEPLOYMENT.md
-cd infra
-terraform init
-terraform apply -var="project_id=YOUR_PROJECT_ID" -var="region=us-central1"
-```
-
-**What gets deployed**
-
-* ☁️ **Cloud Run** - Serverless container hosting
-* 🗄️ **Cloud SQL (PostgreSQL)** - Managed database
-* 🔐 **Secret Manager** - Secure API key storage
-* 📦 **Artifact Registry** - Docker image storage
-* 🔑 **IAM Roles** - Least privilege access
-
-**Full deployment guide**: `DEPLOYMENT.md`
-
----
-
-## 🏗️ Project structure (key files)
-
-* `src/backend/app.py` — API, WebSocket, command engine, DB
-* `src/backend/config.py` — Centralized configuration
-* `src/backend/database.py` — SQLAlchemy models and DB operations
-* `src/backend/ai/gemini_client.py` — Gemini AI integration
-* `src/frontend/templates/index.html` — main UI
-* `src/frontend/static/js/{voice.js, app.js, ui.js}` — voice, app logic, UI events
-* `infra/` — Terraform infrastructure as code
-
----
-
-## 🎮 Using Ballsy
-
-* Click the orb to start/stop listening, or type in the input
-* Examples:
-
-  * “Who is Marie Curie?”
-  * “5 + 10” then “+ 3”
-  * “Open YouTube” / “Play Interstellar soundtrack on Spotify”
-  * “Directions to Central Park” / “Find cafes on Maps”
-
-**Note**: As a web app, native desktop apps cannot be opened; links open in your browser.
-
----
-
-## 🛡️ Security Features
-
-* **Rate Limiting**: 30 requests per minute per user
-* **DDoS Protection**: Max 1000 concurrent sessions with automatic cleanup
-* **Input Validation**: Command length limits and sanitization
-* **Session Management**: Auto cleanup of expired sessions (1 hour timeout)
-* **CORS Protection**: Configurable origins (restricted in production)
-* **Trusted Hosts**: Only allowed hosts can access the API
-* **Security Headers**: XSS protection, content type validation, frame protection
-* **Secret Management**: API keys stored in GCP Secret Manager (production)
-* **IAM Roles**: Least privilege access for Cloud Run service account
-
----
-
-## 🧪 Testing Multi-User Support
-
-```bash
-python test_concurrent_users.py
-```
-
-Simulates 3 users sending commands concurrently to verify session isolation.
-
----
-
-## 🧪 Security Testing
-
-```bash
-python test_security.py
-```
-
-Tests:
-
-* Rate limiting
-* Input validation and sanitization
-* Session isolation
-* DDoS protection
-* Concurrent user support
-
----
-
-## 🔌 API
-
-* `GET /health` — Health check endpoint
-* `GET /ready` — Readiness check (includes DB connectivity)
-* `POST /api/command` — process text commands
-* `POST /api/voice` — process uploaded audio (WAV)
-* `GET /api/settings/{user_id}` — read settings
-* `PUT /api/settings/{user_id}` — update settings
-* `GET /api/history/{user_id}?limit=10` — recent command history
-* `WS /ws/voice/{client_id}` — real-time command channel
-
-**Environment Variables**
+Backend on Render:
 
 ```env
-# Required
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Database (local dev uses SQLite, production uses PostgreSQL)
-DATABASE_URL=sqlite:///./voice_assistant.db
-# DATABASE_URL=postgresql+psycopg2://user:pass@host/db
-
-# Optional
-HOST=0.0.0.0
-PORT=8000
-CORS_ORIGINS=*
-GEMINI_MODEL=gemini-2.0-flash-exp
-LOG_LEVEL=INFO
+ENVIRONMENT=production
+NVIDIA_API_KEY=your_nvidia_key
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=mistralai/mistral-nemotron
+DATABASE_URL=postgresql://user:password@ep-example.region.aws.neon.tech/ballsy?sslmode=require
+CORS_ORIGINS=https://your-vercel-app.vercel.app
+ALLOWED_HOSTS=your-render-service.onrender.com
+USE_CLOUD_TTS=false
+USE_CLOUDFLARE_TTS=false
+ENABLE_GEMINI_TTS=false
 ```
 
----
+Frontend on Vercel:
 
-## 🐳 Docker
-
-The included `Dockerfile` is optimized for Cloud Run deployment:
-
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
-EXPOSE 8080
-ENV PORT=8080
-CMD ["python", "run.py"]
+```env
+BALLSY_BACKEND_URL=https://your-render-service.onrender.com
 ```
 
-**Build and run locally**
+## Project Structure
 
-```bash
-docker build -t ballsy-voice-assistant .
-docker run -p 8000:8080 -e GEMINI_API_KEY=your_key -e DATABASE_URL=sqlite:///./voice_assistant.db ballsy-voice-assistant
-```
+- `src/backend/app.py`: FastAPI app, API routes, WebSocket handling, command processing.
+- `src/backend/ai/nvidia_client.py`: NVIDIA NIM chat completions client.
+- `src/backend/config.py`: Environment-driven app configuration.
+- `src/backend/database.py`: SQLAlchemy models and database setup.
+- `src/frontend/templates/index.html`: Main Ballsy UI.
+- `src/frontend/static/css/styles.css`: Orb UI and responsive layout styling.
+- `src/frontend/static/js/voice.js`: Speech recognition, WebTTS, API calls.
+- `scripts/build_frontend.sh`: Vercel static frontend build.
+- `render.yaml`: Render backend/database blueprint.
+- `vercel.json`: Vercel frontend config.
 
----
+## Notes
 
-## 📊 Database Migrations (Alembic)
-
-```bash
-alembic revision --autogenerate -m "Description"
-alembic upgrade head
-
-# Or helper script
-python scripts/migrate_db.py
-```
-
----
-
-## 📚 Documentation
-
-* `DEPLOYMENT.md` — Complete GCP deployment guide
-* `MIGRATION_SUMMARY.md` — Migration details from Mistral/SQLite to Gemini/PostgreSQL
-* `plan.md` — Architecture and migration planning
-* `user_guide.md` — User-facing documentation
-
----
-
-## 🚀 What's New (v2.0)
-
-* ✅ Migrated from Mistral AI to **Google Gemini API**
-* ✅ Replaced SQLite with **PostgreSQL (Cloud SQL)**
-* ✅ Deployed on **GCP Cloud Run** (serverless)
-* ✅ Added **Terraform infrastructure as code**
-* ✅ Implemented **centralized configuration**
-* ✅ Added **health/readiness endpoints**
-* ✅ Improved **error handling and logging**
-* ✅ **Secret Manager** integration for secure key storage
-
----
-
-## 🧩 Sticker board
-
-* Core vibe: 🎤🧠✨🚀🌙💬
-* UI/voice: 🔊🎛️🟣🔵🟢🟠
-* Web/search: 🌐🔎🗺️🧭
-* Cloud: ☁️🗄️🔐📦
-* Fun: 🦾🔥🕶️💥
-
-Copy-paste packs:
-
-* Starter: `🎤 🧠 ✨`
-* Power: `🎤 🧠 ✨ 🚀 🌐 🔎`
-* Night mode: `🌙 🎤 🟣 💬`
-* Cloud: `☁️ 🎤 🗄️ ✨`
-
----
-
-— Made with ❤️ by Pravar Chauhan
-
-**Ballsy — your witty, wise AI companion**
-
-```
-
+The repo still contains older Google/Gemini and Google Cloud TTS modules as optional fallbacks, but the active production path is NVIDIA for AI and browser WebTTS for speech. Keep provider keys in `.env`, Render environment variables, or Vercel environment variables. Do not commit secrets.

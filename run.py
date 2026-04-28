@@ -2,7 +2,7 @@
 """
 Entrypoint for Render deployment.
 
-- Loads environment variables (including MISTRAL_API_KEY).
+- Loads environment variables for local development.
 - Imports and runs the FastAPI app (which also serves your frontend).
 - Listens on the port assigned by Render (via $PORT), defaulting to 8000 locally.
 """
@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import uvicorn
 from src.backend.app import app  # Your FastAPI app, which should serve "/"
 
-# Load .env (Render will also inject MISTRAL_API_KEY into the environment)
+# Load .env locally. Render injects production environment variables.
 load_dotenv()
 
 if __name__ == "__main__":

@@ -4,12 +4,14 @@
  */
 
 // Configuration - use the current origin so deployed environments work
+const appBackendOrigin = (window.BALLSY_BACKEND_URL || window.location.origin).replace(/\/$/, '');
 const appApiBaseUrl = typeof API_BASE_URL !== 'undefined'
     ? API_BASE_URL
-    : window.location.origin;
-const appWsBaseUrl = window.location.protocol === 'https:'
-    ? `wss://${window.location.host}`
-    : `ws://${window.location.host}`;
+    : appBackendOrigin;
+const appBackendUrl = new URL(appBackendOrigin);
+const appWsBaseUrl = appBackendUrl.protocol === 'https:'
+    ? `wss://${appBackendUrl.host}`
+    : `ws://${appBackendUrl.host}`;
 
 // Backend expects numeric user_id; use a stable numeric ID (1) for this client
 const DEFAULT_USER_ID = 1;
@@ -148,12 +150,8 @@ function handleCommandResponse(response) {
     // Update UI state
     updateUIState('speaking');
     
-    // Use Gemini TTS audio if provided, otherwise fall back to browser TTS
-    if (response.audio_base64 && window.playGeminiAudio) {
-        playGeminiAudio(response.audio_base64);
-    } else {
-        speakText(response.response);
-    }
+    // Use browser Web Speech TTS for a lighter, more natural local feel.
+    speakText(response.response);
     
     // Handle any actions
     if (response.action) {
@@ -525,9 +523,8 @@ function speakText(text) {
         utterance.voice = voice;
     }
     
-    // Set rate (convert from 120-250 range to 0.5-1.5 range)
-    const normalizedRate = (appState.settings.voiceSpeed - 120) / (250 - 120);
-    utterance.rate = 0.5 + normalizedRate;
+    utterance.rate = 0.95;
+    utterance.pitch = 0.98;
     
     // Speak
     window.speechSynthesis.speak(utterance);
