@@ -64,6 +64,15 @@ voice_assistant.log
 graphify-out/
 src/frontend/dist/
 
+# Local agent skill installs
+.agents/
+.claude/
+.codebuddy/
+.continue/
+.kiro/
+.windsurf/
+skills-lock.json
+
 # Temporary files
 temp_audio_*.wav
 *.tmp

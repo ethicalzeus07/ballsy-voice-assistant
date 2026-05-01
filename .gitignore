@@ -123,3 +123,12 @@ celerybeat.pid
 .dmypy.json
 dmypy.json
 .vercel
+
+# Local agent skill installs
+.agents/
+.claude/
+.codebuddy/
+.continue/
+.kiro/
+.windsurf/
+skills-lock.json

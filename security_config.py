@@ -20,7 +20,7 @@ class SecurityConfig:
     
     # Input validation
     MAX_COMMAND_LENGTH = int(os.getenv("MAX_COMMAND_LENGTH", "1000"))
-    MAX_AUDIO_FILE_SIZE = int(os.getenv("MAX_AUDIO_FILE_SIZE", "10 * 1024 * 1024"))  # 10MB
+    MAX_AUDIO_FILE_SIZE = int(os.getenv("MAX_AUDIO_FILE_SIZE", str(10 * 1024 * 1024)))  # 10MB
     
     # CORS settings
     ALLOWED_ORIGINS: List[str] = [
@@ -37,7 +37,7 @@ class SecurityConfig:
     ]
     
     # API limits
-    MAX_WEBHOOK_PAYLOAD_SIZE = int(os.getenv("MAX_WEBHOOK_PAYLOAD_SIZE", "1024 * 1024"))  # 1MB
+    MAX_WEBHOOK_PAYLOAD_SIZE = int(os.getenv("MAX_WEBHOOK_PAYLOAD_SIZE", str(1024 * 1024)))  # 1MB
     
     @classmethod
     def get_cors_origins(cls) -> List[str]:

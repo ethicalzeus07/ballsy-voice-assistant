@@ -14,13 +14,17 @@ This module provides the core backend functionality including:
 
 import os
 import re
+import ast
 import time
 import logging
 import datetime
 import asyncio
+import tempfile
+import operator
 from collections import defaultdict, deque
 from typing import Dict, List, Optional, Any
 from contextlib import asynccontextmanager
+from urllib.parse import quote, quote_plus
 
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, File, UploadFile
@@ -88,11 +92,56 @@ app = FastAPI(
 )
 
 
+_client_rate_limits: Dict[str, deque] = defaultdict(lambda: deque(maxlen=config.MAX_REQUESTS_PER_MINUTE))
+
+
+def _get_client_key(request_or_websocket: Any) -> str:
+   """Return a stable client key for coarse abuse protection."""
+   client = getattr(request_or_websocket, "client", None)
+   return client.host if client and client.host else "unknown"
+
+
+def _check_client_rate_limit(client_key: str) -> bool:
+   """Apply an IP/client-level rate limit so user_id changes cannot bypass abuse checks."""
+   current_time = time.time()
+   hits = _client_rate_limits[client_key]
+
+   while hits and current_time - hits[0] > config.RATE_LIMIT_WINDOW:
+       hits.popleft()
+
+   if len(hits) >= config.MAX_REQUESTS_PER_MINUTE:
+       logger.warning("Client rate limit exceeded for %s", client_key)
+       return False
+
+   hits.append(current_time)
+   return True
+
+
+@app.middleware("http")
+async def api_rate_limit_middleware(request: Request, call_next):
+   """Rate-limit API endpoints by client IP and attach baseline security headers."""
+   if request.url.path.startswith("/api/"):
+       if not _check_client_rate_limit(f"http:{_get_client_key(request)}"):
+           return JSONResponse(
+               status_code=429,
+               content={"detail": "Too many requests. Please wait a moment before trying again."},
+           )
+
+   response = await call_next(request)
+   response.headers.setdefault("X-Content-Type-Options", "nosniff")
+   response.headers.setdefault("X-Frame-Options", "DENY")
+   response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+   response.headers.setdefault("Permissions-Policy", "camera=(), geolocation=()")
+   if config.is_production():
+       response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+   return response
+
+
 # Security: Configure CORS
 app.add_middleware(
    CORSMiddleware,
    allow_origins=config.CORS_ORIGINS if "*" not in config.CORS_ORIGINS else ["*"],
-   allow_credentials=True,
+   allow_credentials="*" not in config.CORS_ORIGINS,
    allow_methods=["GET", "POST", "PUT"],
    allow_headers=["*"],
 )
@@ -363,7 +412,7 @@ class CommandProcessor:
                match = re.search(r"(?:open|search|play|watch)?\s*(.+?)\s+on\s+youtube", lower_cmd)
                if match:
                    query = match.group(1).strip()
-                   url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+                   url = f"https://www.youtube.com/results?search_query={quote_plus(query)}"
                    response_data = CommandResponse(
                        response=f"Opening {query} on YouTube",
                        action="open_url",
@@ -376,7 +425,7 @@ class CommandProcessor:
                match = re.search(r"(?:open|search|play|listen to)?\s*(.+?)\s+on\s+spotify", lower_cmd)
                if match:
                    query = match.group(1).strip()
-                   url = f"https://open.spotify.com/search/{query.replace(' ', '%20')}"
+                   url = f"https://open.spotify.com/search/{quote(query)}"
                    response_data = CommandResponse(
                        response=f"Opening {query} on Spotify",
                        action="open_url",
@@ -389,7 +438,7 @@ class CommandProcessor:
                match = re.search(r"(?:open|search|play|watch)?\s*(.+?)\s+on\s+netflix", lower_cmd)
                if match:
                    query = match.group(1).strip()
-                   url = f"https://www.netflix.com/search?q={query.replace(' ', '%20')}"
+                   url = f"https://www.netflix.com/search?q={quote_plus(query)}"
                    response_data = CommandResponse(
                        response=f"Opening {query} on Netflix",
                        action="open_url",
@@ -402,7 +451,7 @@ class CommandProcessor:
                match = re.search(r"(?:open|search|find|buy)?\s*(.+?)\s+on\s+amazon", lower_cmd)
                if match:
                    query = match.group(1).strip()
-                   url = f"https://www.amazon.com/s?k={query.replace(' ', '+')}"
+                   url = f"https://www.amazon.com/s?k={quote_plus(query)}"
                    response_data = CommandResponse(
                        response=f"Opening {query} on Amazon",
                        action="open_url",
@@ -416,7 +465,7 @@ class CommandProcessor:
                match = re.search(pattern, lower_cmd)
                if match:
                    query = match.group(1).strip()
-                   url = f"https://twitter.com/search?q={query.replace(' ', '%20')}"
+                   url = f"https://twitter.com/search?q={quote_plus(query)}"
                    response_data = CommandResponse(
                        response=f"Opening {query} on Twitter",
                        action="open_url",
@@ -429,7 +478,7 @@ class CommandProcessor:
                match = re.search(r"(?:open|search|find)?\s*(.+?)\s+on\s+facebook", lower_cmd)
                if match:
                    query = match.group(1).strip()
-                   url = f"https://www.facebook.com/search/top/?q={query.replace(' ', '%20')}"
+                   url = f"https://www.facebook.com/search/top/?q={quote_plus(query)}"
                    response_data = CommandResponse(
                        response=f"Opening {query} on Facebook",
                        action="open_url",
@@ -443,14 +492,14 @@ class CommandProcessor:
                if match:
                    query = match.group(1).strip()
                    if " " not in query:
-                       url = f"https://www.instagram.com/{query}"
+                       url = f"https://www.instagram.com/{quote(query)}"
                        response_data = CommandResponse(
                            response=f"Opening {query}'s Instagram",
                            action="open_url",
                            data={"url": url, "description": f"{query}'s Instagram"}
                        )
                    else:
-                       url = f"https://www.instagram.com/explore/tags/{query.replace(' ', '')}"
+                       url = f"https://www.instagram.com/explore/tags/{quote(query.replace(' ', ''))}"
                        response_data = CommandResponse(
                            response=f"Opening #{query} on Instagram",
                            action="open_url",
@@ -466,14 +515,14 @@ class CommandProcessor:
                        destination = match.group(1).strip()
                        origin = match.group(2).strip() if match.group(2) else ""
                        if origin:
-                           url = f"https://www.google.com/maps/dir/{origin.replace(' ', '+')}/{destination.replace(' ', '+')}"
+                           url = f"https://www.google.com/maps/dir/{quote_plus(origin)}/{quote_plus(destination)}"
                            response_data = CommandResponse(
                                response=f"Getting directions from {origin} to {destination}",
                                action="open_url",
                                data={"url": url, "description": f"Directions from {origin} to {destination}"}
                            )
                        else:
-                           url = f"https://www.google.com/maps/dir//{destination.replace(' ', '+')}"
+                           url = f"https://www.google.com/maps/dir//{quote_plus(destination)}"
                            response_data = CommandResponse(
                                response=f"Getting directions to {destination}",
                                action="open_url",
@@ -485,7 +534,7 @@ class CommandProcessor:
                    match = re.search(r"(?:find|search|locate|show)?\s*(.+?)\s+on\s+(?:maps|google maps)", lower_cmd)
                    if match:
                        location = match.group(1).strip()
-                       url = f"https://www.google.com/maps/search/{location.replace(' ', '+')}"
+                       url = f"https://www.google.com/maps/search/{quote_plus(location)}"
                        response_data = CommandResponse(
                            response=f"Showing {location} on Maps",
                            action="open_url",
@@ -498,7 +547,7 @@ class CommandProcessor:
                match = re.search(r"(?:news about|latest news on)\s+(.+)", lower_cmd)
                if match:
                    topic = match.group(1).strip()
-                   url = f"https://news.google.com/search?q={topic.replace(' ', '+')}"
+                   url = f"https://news.google.com/search?q={quote_plus(topic)}"
                    response_data = CommandResponse(
                        response=f"Here's the latest news about {topic}",
                        action="open_url",
@@ -552,7 +601,7 @@ class CommandProcessor:
                    if match:
                        target = match.group(1).strip()
                        if " on google" in lower_cmd:
-                           url = f"https://www.google.com/search?q={target.replace(' ', '+')}"
+                           url = f"https://www.google.com/search?q={quote_plus(target)}"
                            response_data = CommandResponse(
                                response=f"Searching for {target} on Google",
                                action="open_url",
@@ -697,7 +746,7 @@ class CommandProcessor:
            if re.match(r"^\s*[\+\-\*\/]\s*\d+", cmd):
                if session_memory["last_result"] is not None:
                    expression = f"{session_memory['last_result']} {cmd}"
-                   result = eval(expression)
+                   result = self._safe_eval_math(expression)
                    session_memory["last_result"] = result
                    session_memory["calculations"].append({
                        "expression": expression,
@@ -708,7 +757,7 @@ class CommandProcessor:
            match = re.match(r"(?:what'?s\s*)?([\d\s\+\-\*\/]+)$", cmd)
            if match:
                expression = match.group(1).strip()
-               result = eval(expression)
+               result = self._safe_eval_math(expression)
                session_memory["last_result"] = result
                session_memory["calculations"].append({
                    "expression": expression,
@@ -719,6 +768,34 @@ class CommandProcessor:
            logger.error(f"Math error: {e}")
            return None
        return None
+
+
+   def _safe_eval_math(self, expression: str) -> float:
+       """Evaluate simple arithmetic without Python eval."""
+       if len(expression) > 80:
+           raise ValueError("Math expression too long")
+
+       operators = {
+           ast.Add: operator.add,
+           ast.Sub: operator.sub,
+           ast.Mult: operator.mul,
+           ast.Div: operator.truediv,
+           ast.USub: operator.neg,
+           ast.UAdd: operator.pos,
+       }
+
+       def eval_node(node):
+           if isinstance(node, ast.Expression):
+               return eval_node(node.body)
+           if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+               return node.value
+           if isinstance(node, ast.BinOp) and type(node.op) in operators:
+               return operators[type(node.op)](eval_node(node.left), eval_node(node.right))
+           if isinstance(node, ast.UnaryOp) and type(node.op) in operators:
+               return operators[type(node.op)](eval_node(node.operand))
+           raise ValueError("Unsupported math expression")
+
+       return eval_node(ast.parse(expression, mode="eval"))
 
 
    async def _get_info_or_search(self, query: str, is_person: bool = False, user_id = 1) -> CommandResponse:
@@ -914,6 +991,9 @@ async def readiness_check():
 @app.get("/debug/tts")
 async def debug_tts():
    """Debug endpoint to test TTS functionality."""
+   if config.is_production() or not config.ENABLE_GEMINI_TTS:
+       raise HTTPException(status_code=404, detail="Not found")
+
    from src.backend.tts import synthesize_pcm
    
    try:
@@ -943,11 +1023,20 @@ async def tts_endpoint(body: TTSRequest):
    Synthesize text to speech using the legacy Google Cloud Text-to-Speech API.
    Returns MP3 or OGG audio bytes.
    """
+   if not config.USE_CLOUD_TTS:
+       raise HTTPException(status_code=404, detail="Hosted TTS is disabled")
+
    from src.backend.tts_google import synthesize_tts
    from google.cloud import texttospeech
    
    if not body.text or not body.text.strip():
        raise HTTPException(status_code=400, detail="Text is required")
+   if len(body.text) > 1000:
+       raise HTTPException(status_code=400, detail="Text is too long")
+   if not 0.25 <= (body.speaking_rate or 1.0) <= 2.0:
+       raise HTTPException(status_code=400, detail="speaking_rate must be between 0.25 and 2.0")
+   if not -20.0 <= (body.pitch or 0.0) <= 20.0:
+       raise HTTPException(status_code=400, detail="pitch must be between -20.0 and 20.0")
    
    fmt = body.format or "mp3"
    if fmt not in ("mp3", "ogg"):
@@ -996,17 +1085,23 @@ async def process_command(request: CommandRequest):
 @app.post("/api/voice", response_model=CommandResponse)
 async def process_voice(file: UploadFile = File(...), user_id: int = 1):
    """Process a voice file and return the response."""
-   temp_file_path = f"temp_audio_{int(time.time())}.wav"
+   temp_file_path = None
    try:
-       with open(temp_file_path, "wb") as buffer:
-           buffer.write(await file.read())
+       size = 0
+       with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as buffer:
+           temp_file_path = buffer.name
+           while chunk := await file.read(1024 * 1024):
+               size += len(chunk)
+               if size > config.MAX_UPLOAD_BYTES:
+                   raise HTTPException(status_code=413, detail="Audio file is too large")
+               buffer.write(chunk)
        text = speech_recognizer.recognize_from_file(temp_file_path)
        if not text:
            return CommandResponse(response="I didn't catch that. Could you please repeat?")
        response = await command_processor.process_command(text, user_id)
        return response
    finally:
-       if os.path.exists(temp_file_path):
+       if temp_file_path and os.path.exists(temp_file_path):
            os.remove(temp_file_path)
 
 
@@ -1115,11 +1210,22 @@ async def websocket_voice_endpoint(websocket: WebSocket, client_id: int):
    WebSocket endpoint for real-time voice communication.
    Receives JSON messages like {"command": "..."} or {"status": "listening"}.
    """
+   client_key = f"ws:{_get_client_key(websocket)}"
+   if not _check_client_rate_limit(client_key):
+       await websocket.close(code=1008)
+       return
+
    await manager.connect(websocket, client_id)
    try:
        while True:
            data = await websocket.receive_json()
            if "command" in data:
+               if not _check_client_rate_limit(client_key):
+                   await manager.send_message(client_id, {
+                       "type": "error",
+                       "message": "Too many requests. Please wait a moment before trying again."
+                   })
+                   continue
                resp = await command_processor.process_command(data["command"], client_id)
                await manager.send_message(client_id, {
                    "type": "command_response",
