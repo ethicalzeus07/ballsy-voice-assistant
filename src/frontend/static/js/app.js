@@ -297,6 +297,10 @@ async function sendAudioData(audioBlob) {
  * @param {string} text - The message text
  */
 function addMessageToConversation(sender, text) {
+    if (typeof window.clearDemoConversation === 'function') {
+        window.clearDemoConversation();
+    }
+
     // Add to state
     appState.conversation.push({
         sender,

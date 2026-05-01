@@ -2606,3 +2606,307 @@ body::after,
         font-size: 0.88rem;
     }
 }
+
+/* --------------------------------------------------------------------------
+   Ballsy Product Polish
+   Keeps the classic orb, but makes the first screen feel intentional.
+-------------------------------------------------------------------------- */
+body,
+body.dark-theme {
+    background:
+        radial-gradient(circle at 18% 12%, rgba(47, 143, 216, 0.18), transparent 34rem),
+        radial-gradient(circle at 82% 18%, rgba(241, 119, 58, 0.18), transparent 28rem),
+        linear-gradient(145deg, #fffaf2 0%, #eef8ff 45%, #f8fbff 100%);
+    color: var(--text-color);
+}
+
+body::before {
+    background-image:
+        linear-gradient(rgba(22, 52, 78, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(22, 52, 78, 0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent 82%);
+}
+
+.app-container::before {
+    content: 'Voice-first answers, searches, and actions';
+    position: fixed;
+    top: clamp(1rem, 3vw, 1.8rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+    color: rgba(23, 32, 42, 0.48);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.assistant-container {
+    height: min(810px, calc(100dvh - 3.4rem));
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.78)),
+        radial-gradient(circle at top, rgba(47, 143, 216, 0.09), transparent 19rem);
+}
+
+.assistant-header {
+    padding-bottom: 0.75rem;
+}
+
+.title-subcopy {
+    max-width: 24.5rem;
+    color: rgba(23, 32, 42, 0.72);
+    font-size: 1rem;
+}
+
+.proof-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.42rem;
+    margin: 0.7rem auto 0;
+}
+
+.proof-strip span {
+    border: 1px solid rgba(47, 143, 216, 0.15);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.65);
+    color: rgba(23, 32, 42, 0.62);
+    padding: 0.34rem 0.58rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.conversation-container {
+    padding-top: 0.65rem;
+}
+
+#conversation-history {
+    display: flex;
+    flex-direction: column;
+    gap: 0.58rem;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.54)),
+        radial-gradient(circle at 15% 0%, rgba(47, 143, 216, 0.08), transparent 14rem);
+}
+
+#conversation-history:empty::before {
+    content: 'Your response will appear here. Try a prompt or tap the mic.';
+}
+
+.demo-message {
+    animation: demoRise 520ms ease both;
+}
+
+.demo-message.assistant-message {
+    position: relative;
+}
+
+.demo-message.assistant-message::after {
+    content: 'Try me';
+    display: inline-flex;
+    margin-left: 0.45rem;
+    transform: translateY(-0.06rem);
+    border-radius: 999px;
+    background: rgba(56, 161, 105, 0.12);
+    color: #2f7d52;
+    padding: 0.15rem 0.42rem;
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+@keyframes demoRise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.voice-section {
+    padding-top: 0.15rem;
+}
+
+.voice-indicator {
+    margin-bottom: 0.2rem;
+}
+
+.prompt-chips {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem;
+    margin: 0.8rem auto 0;
+    max-width: 25rem;
+}
+
+.prompt-chip {
+    border: 1px solid rgba(47, 143, 216, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.76);
+    color: rgba(23, 32, 42, 0.72);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 0.54rem 0.72rem;
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.prompt-chip:hover,
+.prompt-chip:focus-visible {
+    transform: translateY(-1px);
+    border-color: rgba(241, 119, 58, 0.34);
+    background: #ffffff;
+    color: #17202a;
+    outline: none;
+}
+
+@media (max-width: 560px) {
+    html,
+    body {
+        overflow: hidden;
+    }
+
+    .app-container {
+        align-items: stretch;
+        padding: 0.45rem;
+        padding-top: 1.7rem;
+    }
+
+    .app-container::before {
+        top: 0.55rem;
+        font-size: 0.64rem;
+        letter-spacing: 0.08em;
+    }
+
+    .assistant-container {
+        width: 100%;
+        height: calc(100dvh - 2.15rem);
+        border-radius: 24px;
+    }
+
+    .assistant-header {
+        padding: 0.85rem 0.78rem 0.52rem;
+    }
+
+    .header-top {
+        margin-bottom: 0.55rem;
+    }
+
+    .b-logo {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 0.4rem;
+    }
+
+    .b-logo span {
+        font-size: 1.75rem;
+    }
+
+    .title {
+        font-size: 1.9rem;
+    }
+
+    .title-subcopy {
+        max-width: 19rem;
+        margin-top: 0.38rem;
+        font-size: 0.82rem;
+        line-height: 1.32;
+    }
+
+    .proof-strip {
+        gap: 0.3rem;
+        margin-top: 0.52rem;
+    }
+
+    .proof-strip span {
+        padding: 0.25rem 0.42rem;
+        font-size: 0.58rem;
+    }
+
+    #dark-toggle {
+        top: 0.7rem;
+        right: 0.7rem;
+        width: 34px;
+        height: 34px;
+    }
+
+    .conversation-container {
+        padding: 0.55rem 0.7rem 0.4rem;
+    }
+
+    #conversation-history {
+        padding: 0.72rem;
+        border-radius: 20px;
+        gap: 0.45rem;
+    }
+
+    .user-message,
+    .assistant-message,
+    .typing-indicator {
+        max-width: 91%;
+        padding: 0.66rem 0.78rem;
+        font-size: 0.86rem;
+        border-radius: 18px;
+    }
+
+    .voice-section {
+        padding: 0.1rem 0.7rem 0.62rem;
+    }
+
+    .voice-indicator {
+        width: 92px;
+        height: 92px;
+    }
+
+    .voice-orb {
+        width: 70px;
+        height: 70px;
+    }
+
+    .ring2 {
+        inset: 13px;
+    }
+
+    #status-text {
+        font-size: 0.9rem;
+    }
+
+    .status-subtitle {
+        font-size: 0.76rem;
+    }
+
+    .prompt-chips {
+        gap: 0.32rem;
+        margin-top: 0.55rem;
+    }
+
+    .prompt-chip {
+        padding: 0.42rem 0.5rem;
+        font-size: 0.68rem;
+    }
+
+    .input-section {
+        padding: 0.08rem 0.7rem 0.72rem;
+    }
+
+    #text-command {
+        padding: 0.7rem 0.72rem;
+        font-size: 0.88rem;
+    }
+
+    #send-button {
+        width: 40px;
+        height: 40px;
+    }
+}

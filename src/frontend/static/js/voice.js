@@ -406,6 +406,10 @@ function addMessageToConversationFallback(sender, text) {
 
     const conversationHistory = document.getElementById('conversation-history');
     if (conversationHistory) {
+        if (typeof window.clearDemoConversation === 'function') {
+            window.clearDemoConversation();
+        }
+
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', `${sender}-message`);
         messageElement.textContent = text;
