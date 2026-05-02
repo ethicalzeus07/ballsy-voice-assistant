@@ -2916,21 +2916,23 @@ body::before {
    Editorial contrast, precise controls, and a calmer production feel.
 -------------------------------------------------------------------------- */
 :root {
-    --ballsy-canvas: #131313;
-    --ballsy-canvas-deep: #08090b;
-    --ballsy-surface: #1a2129;
-    --ballsy-surface-raised: #202a35;
-    --ballsy-panel: rgba(26, 33, 41, 0.92);
-    --ballsy-line: rgba(255, 255, 255, 0.16);
-    --ballsy-line-strong: rgba(255, 255, 255, 0.34);
-    --ballsy-mint: #3cffd0;
-    --ballsy-blue: #1c69d4;
-    --ballsy-blue-active: #0653b6;
-    --ballsy-violet: #5200ff;
+    --ballsy-canvas: #1b1938;
+    --ballsy-canvas-deep: #111025;
+    --ballsy-surface: #221f43;
+    --ballsy-surface-raised: #2b2852;
+    --ballsy-panel: rgba(34, 31, 67, 0.94);
+    --ballsy-line: rgba(233, 229, 221, 0.18);
+    --ballsy-line-strong: rgba(233, 229, 221, 0.32);
+    --ballsy-mint: #cbb7fb;
+    --ballsy-blue: #714cb6;
+    --ballsy-blue-active: #5d3b9f;
+    --ballsy-violet: #cbb7fb;
+    --ballsy-cream: #e9e5dd;
+    --ballsy-charcoal: #292827;
     --ballsy-ink: #ffffff;
-    --ballsy-muted: #a9b1bb;
-    --ballsy-dim: #6f7a86;
-    --ballsy-black: #050607;
+    --ballsy-muted: rgba(255, 255, 255, 0.78);
+    --ballsy-dim: rgba(255, 255, 255, 0.56);
+    --ballsy-black: #292827;
     --ballsy-display: 'Fraunces', 'Bricolage Grotesque', Georgia, serif;
     --ballsy-ui: 'Bricolage Grotesque', 'Helvetica Neue', Helvetica, sans-serif;
     --ballsy-mono: 'Courier New', Courier, monospace;
@@ -2944,8 +2946,8 @@ body {
 body,
 body.dark-theme {
     background:
-        radial-gradient(circle at 50% 0%, rgba(82, 0, 255, 0.08), transparent 28rem),
-        linear-gradient(135deg, #08080b 0%, #0c0c0f 54%, #111217 100%);
+        radial-gradient(circle at 50% 0%, rgba(203, 183, 251, 0.18), transparent 28rem),
+        linear-gradient(135deg, #111025 0%, #1b1938 56%, #292827 100%);
     color: var(--ballsy-ink);
     font-family: var(--ballsy-ui);
     overflow: hidden;
@@ -2953,15 +2955,15 @@ body.dark-theme {
 
 body::before {
     background:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        linear-gradient(rgba(233, 229, 221, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(233, 229, 221, 0.025) 1px, transparent 1px);
     background-size: 48px 48px;
     filter: none;
     mask-image: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent 78%);
 }
 
 body::after {
-    content: '';
+    content: none;
     position: fixed;
     inset: 0;
     pointer-events: none;
@@ -2996,18 +2998,18 @@ body.dark-theme .assistant-container {
     height: min(835px, calc(100dvh - clamp(1.8rem, 4.4vw, 3.6rem)));
     min-height: 0;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 32px;
+    border: 1px solid rgba(233, 229, 221, 0.2);
+    border-radius: 0;
     background:
-        linear-gradient(180deg, rgba(26, 33, 41, 0.96), rgba(13, 17, 21, 0.97)),
+        linear-gradient(180deg, rgba(27, 25, 56, 0.97), rgba(17, 16, 37, 0.98)),
         var(--ballsy-surface);
-    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48);
-    backdrop-filter: blur(18px);
+    box-shadow: 0 30px 90px rgba(17, 16, 37, 0.46);
+    backdrop-filter: none;
 }
 
 .assistant-container::before {
     background:
-        linear-gradient(90deg, transparent, rgba(60, 255, 208, 0.42), rgba(82, 0, 255, 0.34), transparent);
+        linear-gradient(90deg, transparent, rgba(203, 183, 251, 0.62), rgba(233, 229, 221, 0.42), transparent);
     height: 1px;
     opacity: 1;
 }
@@ -3038,10 +3040,10 @@ body.dark-theme .assistant-container {
 }
 
 .status-badge {
-    border: 1px solid rgba(60, 255, 208, 0.28);
-    border-radius: 999px;
-    background: rgba(60, 255, 208, 0.07);
-    color: var(--ballsy-mint);
+    border: 1px solid rgba(233, 229, 221, 0.22);
+    border-radius: 0;
+    background: rgba(233, 229, 221, 0.08);
+    color: var(--ballsy-cream);
     font-family: var(--ballsy-ui);
     font-size: 0.78rem;
     font-weight: 650;
@@ -3050,18 +3052,18 @@ body.dark-theme .assistant-container {
 }
 
 .status-indicator {
-    background: var(--ballsy-mint);
-    box-shadow: 0 0 14px rgba(60, 255, 208, 0.75);
+    background: var(--ballsy-violet);
+    box-shadow: 0 0 14px rgba(203, 183, 251, 0.7);
 }
 
 .b-logo {
     width: 60px;
     height: 60px;
     margin-bottom: 0.52rem;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 18px;
+    border: 1px solid rgba(233, 229, 221, 0.26);
+    border-radius: 0;
     background:
-        linear-gradient(135deg, #231147, #0d0e14 68%);
+        linear-gradient(135deg, #1b1938, #714cb6);
     box-shadow: none;
 }
 
@@ -3097,8 +3099,8 @@ body.dark-theme .assistant-container {
 
 .title::after {
     content: '.';
-    color: var(--ballsy-mint);
-    -webkit-text-fill-color: var(--ballsy-mint);
+    color: var(--ballsy-cream);
+    -webkit-text-fill-color: var(--ballsy-cream);
 }
 
 .title-subcopy {
@@ -3116,9 +3118,9 @@ body.dark-theme .assistant-container {
 }
 
 .proof-strip span {
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(233, 229, 221, 0.2);
+    border-radius: 0;
+    background: rgba(233, 229, 221, 0.06);
     color: var(--ballsy-muted);
     font-family: var(--ballsy-ui);
     font-size: 0.76rem;
@@ -3128,8 +3130,8 @@ body.dark-theme .assistant-container {
 }
 
 .proof-strip span:first-child {
-    border-color: rgba(60, 255, 208, 0.54);
-    color: var(--ballsy-mint);
+    border-color: rgba(203, 183, 251, 0.62);
+    color: var(--ballsy-violet);
 }
 
 #dark-toggle {
@@ -3137,15 +3139,16 @@ body.dark-theme .assistant-container {
     right: 1.15rem !important;
     width: 38px !important;
     height: 38px !important;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(233, 229, 221, 0.24) !important;
     border-radius: 0 !important;
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(233, 229, 221, 0.06) !important;
     color: var(--ballsy-ink) !important;
     line-height: 38px !important;
 }
 
 #dark-toggle:hover {
-    background: var(--ballsy-blue) !important;
+    background: var(--ballsy-cream) !important;
+    color: var(--ballsy-charcoal) !important;
 }
 
 .conversation-container {
@@ -3163,13 +3166,13 @@ body.dark-theme #conversation-history {
     height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
-    border: 0.5px solid rgba(255, 255, 255, 0.14);
-    border-radius: 24px;
+    border: 1px solid rgba(233, 229, 221, 0.16);
+    border-radius: 0;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.018)),
-        rgba(5, 6, 7, 0.38);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+        linear-gradient(180deg, rgba(233, 229, 221, 0.055), rgba(233, 229, 221, 0.025)),
+        rgba(17, 16, 37, 0.48);
+    box-shadow: inset 0 1px 0 rgba(233, 229, 221, 0.06);
+    scrollbar-color: rgba(203, 183, 251, 0.48) transparent;
 }
 
 #conversation-history::before {
@@ -3200,16 +3203,16 @@ body.dark-theme #conversation-history {
 .user-message,
 .assistant-message,
 .typing-indicator {
-    border-radius: 18px;
+    border-radius: 0;
     font-size: 0.95rem;
     line-height: 1.45;
     box-shadow: none;
 }
 
 .user-message {
-    border: 1px solid rgba(28, 105, 212, 0.68);
-    background: var(--ballsy-blue);
-    color: white;
+    border: 1px solid rgba(203, 183, 251, 0.54);
+    background: var(--ballsy-cream);
+    color: var(--ballsy-charcoal);
 }
 
 .user-message::before {
@@ -3218,9 +3221,9 @@ body.dark-theme #conversation-history {
 
 .assistant-message,
 .typing-indicator {
-    border: 1px solid rgba(60, 255, 208, 0.28);
-    background: rgba(32, 42, 53, 0.94);
-    color: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(233, 229, 221, 0.18);
+    background: rgba(41, 40, 39, 0.36);
+    color: rgba(255, 255, 255, 0.88);
 }
 
 .demo-message.assistant-message::after {
@@ -3241,7 +3244,8 @@ body.dark-theme #conversation-history {
 .voice-orb {
     width: 82px;
     height: 82px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(233, 229, 221, 0.24);
+    border-radius: 0;
 }
 
 .voice-orb:hover {
@@ -3251,17 +3255,18 @@ body.dark-theme #conversation-history {
 .orb-inner,
 .voice-orb.idle .orb-inner {
     background:
-        radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.82), transparent 17%),
-        linear-gradient(135deg, #3cffd0, #5200ff 76%);
-    box-shadow: 0 0 0 8px rgba(82, 0, 255, 0.08), 0 18px 44px rgba(82, 0, 255, 0.28);
+        linear-gradient(135deg, var(--ballsy-cream), var(--ballsy-violet) 76%);
+    border-radius: 0;
+    box-shadow: 0 0 0 8px rgba(203, 183, 251, 0.08), 0 18px 44px rgba(17, 16, 37, 0.34);
 }
 
 .status-ring {
-    border-color: rgba(60, 255, 208, 0.22);
+    border-color: rgba(203, 183, 251, 0.22);
+    border-radius: 0;
 }
 
 .ring2 {
-    border-color: rgba(28, 105, 212, 0.25);
+    border-color: rgba(233, 229, 221, 0.18);
 }
 
 #status-text {
@@ -3285,9 +3290,9 @@ body.dark-theme #conversation-history {
 }
 
 .prompt-chip {
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(233, 229, 221, 0.22);
+    border-radius: 0;
+    background: rgba(233, 229, 221, 0.055);
     color: rgba(255, 255, 255, 0.78);
     font-family: var(--ballsy-ui);
     font-size: 0.82rem;
@@ -3299,9 +3304,9 @@ body.dark-theme #conversation-history {
 .prompt-chip:hover,
 .prompt-chip:focus-visible {
     transform: translateY(-1px);
-    border-color: var(--ballsy-mint);
-    background: var(--ballsy-mint);
-    color: var(--ballsy-black);
+    border-color: var(--ballsy-cream);
+    background: var(--ballsy-cream);
+    color: var(--ballsy-charcoal);
 }
 
 .input-section {
@@ -3329,14 +3334,14 @@ body.dark-theme #conversation-history {
 
 .app-footer a:hover,
 .app-footer a:focus-visible {
-    color: var(--ballsy-mint);
+    color: var(--ballsy-violet);
     outline: none;
 }
 
 .input-container {
-    border: 1px solid rgba(255, 255, 255, 0.26);
+    border: 1px solid rgba(233, 229, 221, 0.24);
     border-radius: 0;
-    background: rgba(255, 255, 255, 0.045);
+    background: rgba(233, 229, 221, 0.05);
     box-shadow: none;
 }
 
@@ -3354,39 +3359,47 @@ body.dark-theme #conversation-history {
 }
 
 .input-container:focus-within {
-    border-color: var(--ballsy-mint);
-    box-shadow: inset 0 -2px 0 var(--ballsy-blue);
+    border-color: var(--ballsy-violet);
+    box-shadow: inset 0 -2px 0 var(--ballsy-cream);
 }
 
 #send-button {
     border-radius: 0;
-    background: var(--ballsy-blue);
-    color: white;
+    background: var(--ballsy-cream);
+    color: var(--ballsy-charcoal);
 }
 
 #send-button:hover {
-    background: var(--ballsy-blue-active);
+    background: var(--ballsy-violet);
+    color: var(--ballsy-charcoal);
 }
 
 .voice-orb.listening .orb-inner {
-    background: linear-gradient(135deg, var(--ballsy-mint), var(--ballsy-violet)) !important;
-    box-shadow: 0 0 0 10px rgba(60, 255, 208, 0.1), 0 18px 48px rgba(60, 255, 208, 0.26) !important;
+    background: linear-gradient(135deg, var(--ballsy-cream), var(--ballsy-violet)) !important;
+    box-shadow: 0 0 0 10px rgba(203, 183, 251, 0.1), 0 18px 48px rgba(203, 183, 251, 0.24) !important;
 }
 
 .voice-orb.processing .orb-inner {
-    background: linear-gradient(135deg, var(--ballsy-violet), #b79cff) !important;
+    background: linear-gradient(135deg, var(--ballsy-violet), #e9e5dd) !important;
 }
 
 .voice-orb.speaking .orb-inner {
     background: linear-gradient(135deg, var(--ballsy-violet), var(--ballsy-mint)) !important;
 }
 
+.assistant-container,
+.assistant-container *,
+.assistant-container *::before,
+.assistant-container *::after {
+    border-radius: 0 !important;
+}
+
 @media (max-width: 560px) {
     body,
     body.dark-theme {
         background:
-            radial-gradient(circle at 50% 0%, rgba(82, 0, 255, 0.07), transparent 15rem),
-            linear-gradient(145deg, #08080b, #0c0c0f);
+            radial-gradient(circle at 50% 0%, rgba(203, 183, 251, 0.14), transparent 15rem),
+            linear-gradient(145deg, #111025, #1b1938);
     }
 
     .app-container {
@@ -3403,7 +3416,7 @@ body.dark-theme #conversation-history {
     body.dark-theme .assistant-container {
         width: 100%;
         height: calc(100dvh - 1.9rem);
-        border-radius: 22px;
+        border-radius: 0;
     }
 
     .assistant-container::after {
@@ -3421,7 +3434,7 @@ body.dark-theme #conversation-history {
     .b-logo {
         width: 42px;
         height: 42px;
-        border-radius: 14px;
+        border-radius: 0;
         margin-bottom: 0.3rem;
     }
 
@@ -3465,7 +3478,7 @@ body.dark-theme #conversation-history {
 
     #conversation-history,
     body.dark-theme #conversation-history {
-        border-radius: 18px;
+        border-radius: 0;
         padding: 0.65rem;
     }
 
@@ -3479,7 +3492,7 @@ body.dark-theme #conversation-history {
     .typing-indicator {
         max-width: 92%;
         padding: 0.62rem 0.74rem;
-        border-radius: 15px;
+        border-radius: 0;
         font-size: 0.82rem;
     }
 
