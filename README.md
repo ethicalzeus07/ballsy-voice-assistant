@@ -1,112 +1,142 @@
 # Ballsy Voice Assistant
 
-Ballsy is a full-stack voice assistant with a simple orb UI, fast browser speech input, browser Web Speech text-to-speech, and NVIDIA NIM for AI responses. It is designed to feel conversational, useful, and lightweight enough to deploy with a Render backend and Vercel frontend.
+A real-time voice conversation AI assistant with a minimal, beautiful orb interface. Speak naturally, get intelligent responses instantly. Powered by NVIDIA NIM, deployed on Render + Vercel, built with FastAPI and vanilla JavaScript.
 
-## What It Does
+## 🎤 Live Demo
 
-- Voice and text chat through a minimal web interface.
-- NVIDIA-hosted model responses through an OpenAI-compatible API.
-- Browser WebTTS for natural-ish, fast, no-extra-cost speech output.
-- Smart command handling for searches, links, maps, media, math, and normal conversation.
-- FastAPI backend with REST and WebSocket support.
-- SQLAlchemy database support for local SQLite and production Postgres.
-- Production config for Render backend and Vercel frontend.
+**Try it now:** [https://ballsy-voice-assistant-main.vercel.app/](https://ballsy-voice-assistant-main.vercel.app/)
 
-## Architecture
+Just click the orb and speak. No sign-up required.
 
-```mermaid
-flowchart LR
-  U[User voice or text] --> F[Vercel frontend]
-  F -->|REST or WebSocket| B[Render FastAPI backend]
-  B --> N[NVIDIA NIM chat completions]
-  B --> D[(Postgres in production or SQLite locally)]
-  F --> T[Browser Web Speech TTS]
+## ✨ Features
+
+- **Voice-First Interface** — Click the orb, speak naturally, get AI responses read aloud instantly
+- **Real-Time WebSocket** — Low-latency conversation with streaming responses
+- **Browser-Based TTS** — Native Web Speech API means no extra dependencies or latency
+- **Smart Command Processing** — Understands searches, web queries, math, maps, and natural conversation
+- **Minimal, Beautiful UI** — Responsive design with smooth animations and glass morphism
+- **Production-Ready** — Deployed on free tier: Render (backend), Vercel (frontend), Neon (database)
+
+## 🏗️ Architecture
+
+```
+User (voice/text)
+    ↓
+Vercel Frontend (vanilla JS + Web Speech)
+    ↓
+Render FastAPI Backend (REST + WebSocket)
+    ↓
+NVIDIA NIM LLM (chat completions)
+    ↓
+Neon Postgres (conversation history)
 ```
 
-## Local Setup
+## 🚀 Quick Start (Local Development)
 
-Create a virtual environment and install dependencies:
-
+### 1. Setup Python environment
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Create `.env` from the example and add your NVIDIA key:
-
+### 2. Configure environment
 ```bash
 cp .env.example .env
 ```
 
-Minimum local `.env`:
-
+Edit `.env` with your NVIDIA API key:
 ```env
-NVIDIA_API_KEY=your_nvidia_key
+NVIDIA_API_KEY=your_nvidia_key_here
 NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
 NVIDIA_MODEL=mistralai/mistral-nemotron
 DATABASE_URL=sqlite:///./voice_assistant.db
-USE_CLOUD_TTS=false
-USE_CLOUDFLARE_TTS=false
-ENABLE_GEMINI_TTS=false
 ```
 
-Run the app:
-
+### 3. Run locally
 ```bash
 python run.py
 ```
 
-Then open `http://localhost:8000`.
+Open browser to `http://localhost:8000` and click the orb to start talking.
 
-## Production Deployment
+## 🔧 Tech Stack
 
-The current free target setup is:
+| Layer | Tech |
+|-------|------|
+| **Frontend** | HTML5, CSS3, Vanilla JavaScript, Web Speech API |
+| **Backend** | FastAPI, Python 3.x, SQLAlchemy, Pydantic |
+| **AI Model** | NVIDIA NIM (Mistral Nemotron) via OpenAI-compatible API |
+| **Database** | PostgreSQL (Neon) in production, SQLite locally |
+| **Deployment** | Vercel (frontend), Render (backend), Neon (database) |
+| **Real-Time** | WebSocket protocol for streaming responses |
 
-- Backend: Render web service running `uvicorn src.backend.app:app --host 0.0.0.0 --port $PORT`.
-- Database: Neon Free Postgres.
-- Frontend: Vercel static build from `scripts/build_frontend.sh`.
-- AI: NVIDIA API key stored only in Render environment variables.
-- Voice: Browser Web Speech API, so no TTS hosting is required.
+## 📁 Project Structure
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for exact Neon, Render, and Vercel steps.
+```
+src/
+├── backend/
+│   ├── app.py              # FastAPI app, routes, WebSocket, command processing
+│   ├── config.py           # Environment configuration
+│   ├── database.py         # SQLAlchemy models
+│   ├── ai/
+│   │   ├── nvidia_client.py    # NVIDIA NIM chat completions
+│   │   └── gemini_client.py    # Google Gemini (fallback)
+│   └── tts.py              # TTS providers (Google Cloud, Cloudflare)
+│
+└── frontend/
+    ├── templates/
+    │   └── index.html      # Main orb UI
+    └── static/
+        ├── css/styles.css  # Orb styling, responsive layout
+        └── js/
+            ├── voice.js    # Speech recognition, WebTTS, API
+            └── ui.js       # UI utilities
 
-## Important Environment Variables
+scripts/
+├── build_frontend.sh       # Frontend build for Vercel
+└── migrate_db.py          # Database migrations
 
-Backend on Render:
+Deployment configs:
+├── render.yaml            # Render backend blueprint
+├── vercel.json           # Vercel frontend config
+└── Dockerfile            # Container image for deployment
+```
 
+## 🌐 Production Deployment
+
+### Environment (Render Backend)
 ```env
 ENVIRONMENT=production
-NVIDIA_API_KEY=your_nvidia_key
+NVIDIA_API_KEY=your_key
 NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
 NVIDIA_MODEL=mistralai/mistral-nemotron
-DATABASE_URL=postgresql://user:password@ep-example.region.aws.neon.tech/ballsy?sslmode=require
-CORS_ORIGINS=https://your-vercel-app.vercel.app
+DATABASE_URL=postgresql://user:password@neon-db-url/ballsy?sslmode=require
+CORS_ORIGINS=https://your-vercel-domain.vercel.app
 ALLOWED_HOSTS=your-render-service.onrender.com
-USE_CLOUD_TTS=false
-USE_CLOUDFLARE_TTS=false
-ENABLE_GEMINI_TTS=false
 ```
 
-Frontend on Vercel:
+### Deployment Guides
+- **Backend:** Render web service (see `render.yaml`)
+- **Database:** Neon Postgres free tier
+- **Frontend:** Vercel (auto-deploy on git push)
 
-```env
-BALLSY_BACKEND_URL=https://your-render-service.onrender.com
-```
+For detailed deployment steps, see deployment configuration files in the repo.
 
-## Project Structure
+## 🔐 Security
 
-- `src/backend/app.py`: FastAPI app, API routes, WebSocket handling, command processing.
-- `src/backend/ai/nvidia_client.py`: NVIDIA NIM chat completions client.
-- `src/backend/config.py`: Environment-driven app configuration.
-- `src/backend/database.py`: SQLAlchemy models and database setup.
-- `src/frontend/templates/index.html`: Main Ballsy UI.
-- `src/frontend/static/css/styles.css`: Orb UI and responsive layout styling.
-- `src/frontend/static/js/voice.js`: Speech recognition, WebTTS, API calls.
-- `scripts/build_frontend.sh`: Vercel static frontend build.
-- `render.yaml`: Render backend/database blueprint.
-- `vercel.json`: Vercel frontend config.
+- API keys stored in environment variables only (never committed)
+- CORS configured for allowed origins
+- HTTPS enforced in production
+- Database credentials in Neon managed environment
 
-## Notes
+## 📝 License
 
-The repo still contains older Google/Gemini and Google Cloud TTS modules as optional fallbacks, but the active production path is NVIDIA for AI and browser WebTTS for speech. Keep provider keys in `.env`, Render environment variables, or Vercel environment variables. Do not commit secrets.
+MIT License - Feel free to use, modify, and deploy for personal or commercial projects.
+
+## 🎯 Notes
+
+- **Active Stack:** NVIDIA NIM for AI, Browser Web Speech for TTS
+- **Fallbacks:** Includes Google Gemini and Google Cloud TTS as optional alternatives
+- **No Secrets in Repo:** `.env.example` shows required keys but actual values go in environment variables
+- **Browser Support:** Works best in Chrome, Edge, Safari (Web Speech API support varies)

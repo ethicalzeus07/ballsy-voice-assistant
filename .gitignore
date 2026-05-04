@@ -64,6 +64,7 @@ logs/
 # Generated artifacts
 graphify-out/
 src/frontend/dist/
+.vercel_python_packages/
 
 # Temporary files
 temp_audio_*.wav
@@ -132,3 +133,18 @@ dmypy.json
 .kiro/
 .windsurf/
 skills-lock.json
+
+# Internal documentation (not for public consumption)
+DESIGN.md
+DEPLOYMENT_CHECKLIST.md
+DEPLOYMENT_GUIDE.md
+PRODUCTION_DEPLOYMENT_ANALYSIS.md
+MIGRATION_SUMMARY.md
+architecture_design.md
+plan.md
+cursor.md
+todo.md
+
+# Design exploration files and variants
+/bmw/
+/superhuman/
